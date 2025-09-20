@@ -1,10 +1,7 @@
 <template>
-  <div>
-    <header>
-      <title-input :value="profession" @input="changeProfession($event)" :tabindex="1">Profession</title-input>
-      <title-input :value="player" @input="changePlayer($event)" :tabindex="2">Player</title-input>
-    </header>
-    <p>
+  <div class="rat-race-header">
+    <title-input :value="profession" @input="changeProfession($event)" :tabindex="1">Profession</title-input>
+    <p class="rat-race-header__goal">
       Goal: To get out of the Rat Race and onto the Fast Track by building up your Passive Income to be greater than your Total Expenses
     </p>
   </div>
@@ -17,37 +14,25 @@ import { mapState, mapMutations } from "vuex";
 export default {
   components: { TitleInput },
   computed: {
-    ...mapState("meta", ["profession", "player"])
+    ...mapState("meta", ["profession"])
   },
   methods: {
-    ...mapMutations("meta", ["changeProfession", "changePlayer"])
+    ...mapMutations("meta", ["changeProfession"])
   }
 };
 </script>
 
-<style lang="scss" scoped>
-header {
+<style scoped lang="scss">
+.rat-race-header {
   display: flex;
-  flex-wrap: wrap;
-
-  > *:not(:last-child) {
-    // border: 1px solid red;
-    padding-right: 1rem;
-  }
-
-  > * {
-    flex: 1 1 350px;
-    min-width: 350px;
-  }
+  flex-direction: column;
+  gap: 1rem;
 }
-// header > *:not(:last-child) {
-//   padding-right: 1rem;
-// }
-// header > * {
-//   min-width: 600px;
-// }
 
-header ~ p {
-  font-size: 0.875rem;
+.rat-race-header__goal {
+  font-size: 0.85rem;
+  color: rgba(255, 255, 255, 0.72);
+  font-family: "Press Start 2P", monospace;
+  line-height: 1.4;
 }
 </style>

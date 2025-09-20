@@ -1,9 +1,10 @@
 <template>
   <div class="player-sheet" v-if="player">
     <header class="player-sheet__header">
-      <div>
-        <h2>{{ player.name }}</h2>
-        <p>Color: <span :style="{ color: player.color }">{{ player.color }}</span></p>
+      <div class="player-sheet__identity">
+        <span class="player-sheet__tag">Player</span>
+        <h1 class="player-sheet__name">{{ player.name }}</h1>
+        <span class="player-sheet__color" :style="{ backgroundColor: player.color }">{{ player.color }}</span>
       </div>
       <div class="player-sheet__controls">
         <audio-toggle />
@@ -13,8 +14,29 @@
       </div>
     </header>
 
+    <section class="player-sheet__stats" v-if="summary">
+      <div class="player-sheet__stat">
+        <span>Passive Income</span>
+        <strong>{{ formatCurrency(summary.passiveIncome) }}</strong>
+      </div>
+      <div class="player-sheet__stat">
+        <span>Total Income</span>
+        <strong>{{ formatCurrency(summary.totalIncome) }}</strong>
+      </div>
+      <div class="player-sheet__stat">
+        <span>Total Expenses</span>
+        <strong>{{ formatCurrency(summary.totalExpenses) }}</strong>
+      </div>
+      <div class="player-sheet__stat" :class="{ positive: summary.cashflow >= 0, negative: summary.cashflow < 0 }">
+        <span>Cashflow</span>
+        <strong>{{ formatCurrency(summary.cashflow) }}</strong>
+      </div>
+    </section>
+
     <main class="player-sheet__content">
-      <component :is="sheetComponent" />
+      <div class="player-sheet__canvas">
+        <component :is="sheetComponent" />
+      </div>
     </main>
 
     <footer class="player-sheet__footer">
@@ -68,6 +90,7 @@ import { mapState, mapGetters } from "vuex";
 import RatRace from "@/components/RatRace.vue";
 import FastTrack from "@/components/FastTrack.vue";
 import { diffSheets } from "@/utils/diff";
+import { computeSummary } from "@/utils/cashflow";
 import { playSound } from "@/utils/audio";
 import AudioToggle from "@/components/app/AudioToggle.vue";
 
@@ -94,6 +117,10 @@ export default {
     },
     sheetComponent() {
       return this.displaySheet === "Fast Track" ? "FastTrack" : "RatRace";
+    },
+    summary() {
+      if (!this.player) return null;
+      return computeSummary(this.currentSheetState);
     },
     isCorrection() {
       if (this.pendingAuditContext?.type === "correction") return true;
@@ -178,6 +205,9 @@ export default {
         return;
       }
       this.markAsCorrection = event.target.checked;
+    },
+    formatCurrency(value) {
+      return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
     }
   }
 };
@@ -188,82 +218,185 @@ export default {
   min-height: 100vh;
   display: flex;
   flex-direction: column;
-  background: linear-gradient(160deg, #090014, #1e1440 55%, #05010a 100%);
+  background: radial-gradient(circle at top left, #14002a 0%, #05010a 60%, #010006 100%);
   color: #fdf9ff;
 }
 
-.player-sheet__header {
+.player-sheet__header,
+.player-sheet__footer {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2rem 3rem 1.5rem;
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.5rem 2rem;
-  border-bottom: 1px solid rgba(244, 211, 94, 0.2);
   font-family: "Press Start 2P", monospace;
 }
 
-.player-sheet__header h2 {
-  margin: 0 0 0.4rem;
+.player-sheet__footer {
+  padding: 1.5rem 3rem 2rem;
+  border-top: 1px solid rgba(244, 211, 94, 0.18);
 }
 
-.player-sheet__controls button {
-  margin-left: 1rem;
-  padding: 0.65rem 1.4rem;
-  border: 2px solid rgba(244, 211, 94, 0.7);
-  background: rgba(10, 10, 28, 0.9);
-  color: rgba(244, 211, 94, 0.9);
-  font-family: inherit;
+.player-sheet__identity {
+  display: flex;
+  align-items: center;
+  gap: 1.25rem;
+}
+
+.player-sheet__tag {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  letter-spacing: 0.18em;
+  color: #9cf6ff;
+}
+
+.player-sheet__name {
+  margin: 0;
+  font-size: 2.25rem;
+  letter-spacing: 0.08em;
+  text-shadow: 0 2px 8px rgba(0, 0, 0, 0.45);
+}
+
+.player-sheet__color {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 94px;
+  padding: 0.4rem 0.8rem;
+  border-radius: 999px;
+  border: 2px solid rgba(255, 255, 255, 0.75);
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  font-size: 0.75rem;
+  font-family: "Press Start 2P", monospace;
+  color: #ffffff;
+  box-shadow: 0 0 18px rgba(255, 255, 255, 0.15);
+}
+
+.player-sheet__controls {
+  display: flex;
+  align-items: center;
+  gap: 1.2rem;
+}
+
+.player-sheet__controls button,
+.player-sheet__footer button,
+.confirm-modal__actions button {
+  padding: 0.65rem 1.6rem;
+  border-radius: 12px;
+  border: 2px solid rgba(244, 211, 94, 0.65);
+  background: linear-gradient(135deg, rgba(14, 12, 40, 0.95), rgba(26, 18, 52, 0.9));
+  color: rgba(244, 211, 94, 0.92);
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.75rem;
+  letter-spacing: 0.06em;
   cursor: pointer;
+  transition: transform 0.15s ease, box-shadow 0.15s ease, border-color 0.15s ease;
 }
 
-.player-sheet__controls .ghost {
+.player-sheet__controls button:hover,
+.player-sheet__footer button:hover,
+.confirm-modal__actions button:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 8px 18px rgba(244, 211, 94, 0.25);
+}
+
+.player-sheet__controls button.ghost,
+.player-sheet__footer button.ghost,
+.confirm-modal__actions .ghost {
   border-color: rgba(156, 39, 176, 0.6);
-  color: rgba(156, 39, 176, 0.85);
+  color: rgba(208, 170, 255, 0.9);
+}
+
+.player-sheet__controls .audio-toggle {
+  border-radius: 50%;
+  width: 44px;
+  height: 44px;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border: 2px solid rgba(244, 211, 94, 0.5);
+  background: rgba(10, 10, 28, 0.8);
+  font-size: 1.1rem;
+}
+
+.player-sheet__stats {
+  width: 100%;
+  max-width: 1200px;
+  margin: 0 auto 1.25rem;
+  padding: 0 3rem;
+  display: grid;
+  gap: 1rem;
+  grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+}
+
+.player-sheet__stat {
+  background: rgba(13, 10, 34, 0.88);
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: 14px;
+  padding: 1rem 1.2rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+  font-family: "Press Start 2P", monospace;
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.6rem;
+}
+
+.player-sheet__stat strong {
+  font-size: 1rem;
+  letter-spacing: 0.04em;
+}
+
+.player-sheet__stat.positive strong {
+  color: #9cff94;
+}
+
+.player-sheet__stat.negative strong {
+  color: #ff8a80;
 }
 
 .player-sheet__content {
   flex: 1;
-  overflow-y: auto;
-  padding: 1rem 2rem 3rem;
+  width: 100%;
+  padding: 0 3rem 3rem;
+}
+
+.player-sheet__canvas {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 2.5rem 2.75rem;
+  background: rgba(8, 5, 24, 0.82);
+  border: 1px solid rgba(156, 39, 176, 0.35);
+  border-radius: 22px;
+  box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
 }
 
 .player-sheet__footer {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 1rem 2rem;
-  border-top: 1px solid rgba(244, 211, 94, 0.2);
+  gap: 1rem;
 }
 
-.player-sheet__footer button {
-  padding: 0.6rem 1.2rem;
-  border: 2px solid rgba(244, 211, 94, 0.6);
-  background: rgba(10, 10, 28, 0.9);
-  color: rgba(244, 211, 94, 0.9);
+.saving-indicator,
+.error-indicator {
   font-family: "Press Start 2P", monospace;
-  cursor: pointer;
-}
-
-.player-sheet__footer .ghost {
-  border-color: rgba(156, 39, 176, 0.6);
-  color: rgba(156, 39, 176, 0.85);
+  font-size: 0.75rem;
 }
 
 .saving-indicator {
   color: #f4d35e;
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.8rem;
 }
 
 .error-indicator {
   color: #ff8a80;
-  font-family: "Press Start 2P", monospace;
-  font-size: 0.8rem;
 }
 
 .confirm-modal {
   position: fixed;
   inset: 0;
-  background: rgba(4, 0, 18, 0.85);
+  background: rgba(4, 0, 18, 0.88);
   display: flex;
   align-items: center;
   justify-content: center;
@@ -274,11 +407,11 @@ export default {
 .confirm-modal__panel {
   width: min(640px, 100%);
   background: rgba(18, 18, 46, 0.95);
-  border: 3px solid rgba(244, 211, 94, 0.6);
+  border: 3px solid rgba(244, 211, 94, 0.55);
   border-radius: 16px;
   padding: 1.75rem;
   color: #fdf9ff;
-  box-shadow: 0 0 30px rgba(244, 211, 94, 0.2);
+  box-shadow: 0 0 30px rgba(244, 211, 94, 0.25);
 }
 
 .confirm-modal__panel h3 {
@@ -354,20 +487,6 @@ export default {
   opacity: 0.65;
 }
 
-.confirm-modal__actions button {
-  padding: 0.6rem 1.4rem;
-  border: 2px solid rgba(244, 211, 94, 0.6);
-  background: rgba(10, 10, 28, 0.9);
-  color: rgba(244, 211, 94, 0.9);
-  font-family: "Press Start 2P", monospace;
-  cursor: pointer;
-}
-
-.confirm-modal__actions .ghost {
-  border-color: rgba(156, 39, 176, 0.6);
-  color: rgba(156, 39, 176, 0.85);
-}
-
 .fade-enter-active,
 .fade-leave-active {
   transition: opacity 0.2s ease;
@@ -378,22 +497,33 @@ export default {
   opacity: 0;
 }
 
-.player-sheet__empty {
-  min-height: 100vh;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  background: #08001a;
-  gap: 1rem;
+.player-sheet__content ::v-deep input[type="text"],
+.player-sheet__content ::v-deep input[type="number"],
+.player-sheet__content ::v-deep input[type="tel"],
+.player-sheet__content ::v-deep select,
+.player-sheet__content ::v-deep textarea {
+  background: rgba(20, 14, 52, 0.9);
+  border: 1px solid rgba(244, 211, 94, 0.25);
+  border-radius: 10px;
+  color: #fdf9ff;
+  padding: 0.55rem 0.8rem;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
 }
 
-.player-sheet__empty button {
-  padding: 0.6rem 1.5rem;
-  border: 2px solid rgba(244, 211, 94, 0.6);
-  background: transparent;
-  color: rgba(244, 211, 94, 0.9);
-  font-family: "Press Start 2P", monospace;
-  cursor: pointer;
+.player-sheet__content ::v-deep input[type="text"]:focus,
+.player-sheet__content ::v-deep input[type="number"]:focus,
+.player-sheet__content ::v-deep select:focus,
+.player-sheet__content ::v-deep textarea:focus {
+  outline: none;
+  border-color: rgba(244, 211, 94, 0.8);
+  box-shadow: 0 0 0 2px rgba(244, 211, 94, 0.25);
 }
-</style>
+
+.player-sheet__content ::v-deep sub {
+  color: rgba(255, 255, 255, 0.6);
+}
+
+.player-sheet__content ::v-deep table {
+  border-color: rgba(244, 211, 94, 0.25) !important;
+}
+</style></style>

@@ -1,6 +1,9 @@
 <template>
   <section class="area">
-    <title-input :value="player" @input="changePlayer($event)" :tabindex="2">Player</title-input>
+    <div class="player-chip" v-if="playerName">
+      <span class="player-chip__label">Player</span>
+      <span class="player-chip__value">{{ playerName }}</span>
+    </div>
     <div id="auditor-area">
       <title-input :value="auditor" @input="changeAuditor($event)" :tabindex="3">Auditor</title-input>
       <sub>Person on your right</sub>
@@ -18,7 +21,7 @@
           <td colspan="2" class="numeric">X 100</td>
         </tr>
         <tr>
-          <td>Your Beginning CASHFLOW Day Income</sub></td>
+          <td>Your Beginning CASHFLOW Day Income</td>
           <td>=</td>
           <td><dollar-format-input :value="beginningCashFlowDayIncome" readonly /></td>
         </tr>
@@ -35,27 +38,52 @@ import { mapState, mapMutations, mapGetters } from "vuex";
 export default {
   components: { TitleInput, DollarFormatInput },
   computed: {
-    ...mapState("meta", ["player", "auditor"]),
-    ...mapGetters("fasttrack", ["beginningCashFlowDayIncome"])
+    ...mapState("meta", ["auditor", "player"]),
+    ...mapGetters("fasttrack", ["beginningCashFlowDayIncome"]),
+    ...mapGetters(["activePlayer"]),
+    playerName() {
+      return this.activePlayer?.name || this.player;
+    }
   },
   methods: {
-    ...mapMutations("meta", ["changePlayer", "changeAuditor"])
+    ...mapMutations("meta", ["changeAuditor"])
   }
 };
 </script>
 
-<style lang="scss" scoped>
+<style scoped lang="scss">
 .area {
   display: flex;
   flex-direction: column;
   align-content: space-between;
+  gap: 2.5rem;
+}
 
-  /* I can't figure out how to flex the items without improperly stretching the Player title */
-  /* So pleas forgive this travesty */
-  > :nth-child(1),
-  > :nth-child(2) {
-    margin-bottom: 70px;
-  }
+.player-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: "Press Start 2P", monospace;
+  letter-spacing: 0.08em;
+}
+
+.player-chip__label {
+  font-size: 0.7rem;
+  text-transform: uppercase;
+  color: rgba(156, 246, 255, 0.85);
+}
+
+.player-chip__value {
+  padding: 0.35rem 0.75rem;
+  border-radius: 999px;
+  border: 2px solid rgba(156, 39, 176, 0.4);
+  background: rgba(13, 10, 34, 0.85);
+}
+
+#auditor-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
 }
 </style>
 

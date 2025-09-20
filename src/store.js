@@ -300,14 +300,16 @@ export default new Vuex.Store({
       dispatch("hydrateActivePlayer", playerId);
       commit("SET_VIEW", "player-sheet");
     },
-    hydrateActivePlayer({ commit, getters }, playerId = null) {
+    hydrateActivePlayer({ commit, getters, rootState }, playerId = null) {
       const activeGame = getters.activeGame;
       if (!activeGame) return;
       const targetId = playerId || getters.activePlayer?.id;
       if (!targetId) return;
       const player = activeGame.players?.find(p => p.id === targetId);
       if (player) {
-        applySheetStateToModules(commit, player.sheetState || {});
+        applySheetStateToModules(commit, player.sheetState || {}, { setBaseline: false });
+        commit("meta/changePlayer", player.name, { root: true });
+        commit("SET_ACTIVE_SHEET_BASELINE", buildSheetState(rootState));
       }
     },
     async savePlayerSheet({ state, commit, rootState, dispatch }, { audit }) {
