@@ -51,6 +51,9 @@ export default {
 #monthly-cash-flow {
   font-size: 1rem;
   width: 100%;
+  background: rgba(28, 20, 68, 0.95) !important;
+  color: #f4d35e !important;
+  border: 1px solid rgba(244, 211, 94, 0.4) !important;
 }
 
 @media (max-width: 600px) {

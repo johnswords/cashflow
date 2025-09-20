@@ -215,11 +215,12 @@ export default {
 
 <style scoped lang="scss">
 .player-sheet {
-  min-height: 100vh;
+  height: 100vh;
   display: flex;
   flex-direction: column;
   background: radial-gradient(circle at top left, #14002a 0%, #05010a 60%, #010006 100%);
   color: #fdf9ff;
+  overflow: hidden;
 }
 
 .player-sheet__header,
@@ -367,6 +368,8 @@ export default {
   padding: 0 2.5rem 2.5rem;
   display: flex;
   justify-content: center;
+  overflow-y: auto;
+  min-height: 0;
 }
 
 .player-sheet__canvas {
@@ -381,7 +384,8 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
-  overflow: hidden;
+  height: fit-content;
+  min-height: min-content;
 }
 
 @media (max-width: 900px) {

@@ -68,3 +68,34 @@ export default {
   }
 };
 </script>
+
+<style scoped lang="scss">
+input.numeric {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.65rem;
+  background: rgba(20, 14, 52, 0.95);
+  color: #f4d35e;
+  border: 1px solid rgba(244, 211, 94, 0.3);
+  border-radius: 8px;
+  padding: 0.6rem 0.8rem;
+  outline: none;
+  transition: all 0.3s ease;
+  letter-spacing: 0.05em;
+  width: 100%;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+input.numeric:focus {
+  border-color: rgba(244, 211, 94, 0.8);
+  background: rgba(28, 20, 68, 0.95);
+  box-shadow: 0 0 12px rgba(244, 211, 94, 0.3), inset 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+input.numeric[readonly],
+input.numeric[readonly]:focus {
+  background: rgba(12, 8, 34, 0.7);
+  border-color: rgba(244, 211, 94, 0.15);
+  color: rgba(244, 211, 94, 0.6);
+  cursor: not-allowed;
+}
+</style>

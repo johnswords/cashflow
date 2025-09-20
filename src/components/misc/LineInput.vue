@@ -31,6 +31,7 @@ tr.line-input > td:first-child {
   align-items: center;
   gap: 0.75rem;
   flex-wrap: wrap;
+  color: rgba(244, 211, 94, 0.95);
 }
 
 tr.line-input > td:first-child > label {
@@ -38,21 +39,27 @@ tr.line-input > td:first-child > label {
   min-width: 160px;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: rgba(156, 246, 255, 0.9);
+  color: rgba(244, 211, 94, 0.95);
   line-height: 1.35;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.65rem;
+  display: block;
 }
 
-tr.line-input > td:first-child > input {
+tr.line-input > td:first-child > input[type="text"] {
   flex: 1 1 200px;
   width: auto;
+  background: rgba(20, 14, 52, 0.95) !important;
+  color: #f4d35e !important;
+  border: 1px solid rgba(244, 211, 94, 0.3) !important;
 }
 
 .line-input,
 .blank-line-input {
   font-family: "Press Start 2P", monospace;
-  font-size: 0.6rem;
+  font-size: 0.65rem;
   letter-spacing: 0.05em;
-  color: #f6f3ff;
+  color: rgba(244, 211, 94, 0.95);
 }
 
 .line-input.all-text {

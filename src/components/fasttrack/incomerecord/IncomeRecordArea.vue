@@ -174,6 +174,16 @@ export default {
   width: 100%;
 }
 
+/* Ensure input visibility in income record */
+.income-record :deep(input[type="text"]),
+.income-record :deep(input.numeric) {
+  background: rgba(20, 14, 52, 0.95) !important;
+  color: #f4d35e !important;
+  border: 1px solid rgba(244, 211, 94, 0.3) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
 .row-action {
   display: inline-flex;
   align-items: center;

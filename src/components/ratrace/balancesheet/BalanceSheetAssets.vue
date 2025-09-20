@@ -108,6 +108,16 @@ export default {
 #asset-list ::v-deep input[type="text"],
 #asset-list ::v-deep input.numeric {
   width: 100%;
+  background: rgba(20, 14, 52, 0.95) !important;
+  color: #f4d35e !important;
+  border: 1px solid rgba(244, 211, 94, 0.3) !important;
+  visibility: visible !important;
+  opacity: 1 !important;
+}
+
+#asset-list label {
+  color: rgba(156, 246, 255, 0.9);
+  text-transform: uppercase;
 }
 
 #asset-list > .all-text > div {
