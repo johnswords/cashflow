@@ -15,6 +15,10 @@ export default {
 <style lang="scss">
 #fast-track {
   display: flex;
-  justify-content: space-between;
+  justify-content: center;
+}
+
+#fast-track > * {
+  width: min(100%, 1100px);
 }
 </style>

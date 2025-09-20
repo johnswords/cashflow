@@ -23,7 +23,14 @@ export default {
 <style lang="scss">
 .rat-race {
   position: relative;
+  max-width: 1100px;
+  margin: 0 auto;
+  padding: 2rem 0 3rem;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
 }
+
 #income-summary,
 #expense-summary,
 .total-io {
@@ -48,4 +55,5 @@ export default {
     padding-left: 10% !important;
   }
 }
+</style>
 </style>

@@ -363,16 +363,20 @@ export default {
   flex: 1;
   width: 100%;
   padding: 0 3rem 3rem;
+  display: flex;
+  justify-content: center;
 }
 
 .player-sheet__canvas {
-  max-width: 1200px;
+  width: min(100%, 1100px);
+  box-sizing: border-box;
   margin: 0 auto;
-  padding: 2.5rem 2.75rem;
+  padding: 2.5rem 2.25rem 3rem;
   background: rgba(8, 5, 24, 0.82);
   border: 1px solid rgba(156, 39, 176, 0.35);
   border-radius: 22px;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
+  overflow-x: auto;
 }
 
 .player-sheet__footer {
