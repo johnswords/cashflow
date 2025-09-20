@@ -9,16 +9,16 @@
 ## State Management
 - [x] Replace localStorage persistence with backend-driven Vuex store
 - [x] Add actions for games, players, audit log, leaderboard
-- [ ] Wire optimistic update + diff-builder for confirmation modals
+- [x] Wire optimistic update + diff-builder for confirmation modals
 
 ## Frontend Views
-- [ ] Retro load screen with New Game / List Games / Leaderboard menu
-- [ ] New Game flow: player count, names, color selection
-- [ ] Games list view with resume + end game entry points
+- [x] Retro load screen with New Game / List Games / Leaderboard menu
+- [x] New Game flow: player count, names, color selection
+- [x] Games list view with resume + end game entry points
 - [ ] Game dashboard showing player financial summaries + recent changes
-- [ ] Player sheet view using existing RatRace/FastTrack components with save/cancel
+- [x] Player sheet view using existing RatRace/FastTrack components with save/cancel
 - [ ] Audit log modal with correction flagging
-- [ ] Leaderboard view with shared-rank display
+- [x] Leaderboard view with shared-rank display
 
 ## UX Enhancements
 - [ ] Confirmation modals summarizing diffs before saves

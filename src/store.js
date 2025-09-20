@@ -29,37 +29,44 @@ const sanitizeInvestmentsForSave = state => {
   return investmentsState;
 };
 
-const buildSheetState = rootState => {
-  const incomeState = rootState.income ? clone(rootState.income) : initialIncomeState();
-  const expensesState = rootState.expenses ? clone(rootState.expenses) : initialExpensesState();
-  const liabilitiesState = rootState.liabilities ? clone(rootState.liabilities) : initialLiabilitiesState();
-  const assetsState = rootState.assets ? clone(rootState.assets) : initialAssetsState();
-  const investmentsState = rootState.investments
-    ? sanitizeInvestmentsForSave(rootState.investments)
-    : sanitizeInvestmentsForSave(initialInvestmentsState());
-  const metaState = rootState.meta ? clone(rootState.meta) : initialMetaState();
-  const fastTrackState = rootState.fasttrack ? clone(rootState.fasttrack) : initialFastTrackState();
-
-  return {
-    income: incomeState,
-    expenses: expensesState,
-    liabilities: liabilitiesState,
-    assets: assetsState,
-    investments: investmentsState,
-    meta: metaState,
-    fasttrack: fastTrackState
+const normalizeSheetState = (sheetState = {}) => {
+  const normalized = {
+    income: clone(sheetState.income || initialIncomeState()),
+    expenses: clone(sheetState.expenses || initialExpensesState()),
+    liabilities: clone(sheetState.liabilities || initialLiabilitiesState()),
+    assets: clone(sheetState.assets || initialAssetsState()),
+    investments: sanitizeInvestmentsForSave(sheetState.investments || initialInvestmentsState()),
+    meta: clone(sheetState.meta || initialMetaState()),
+    fasttrack: clone(sheetState.fasttrack || initialFastTrackState())
   };
+
+  return normalized;
 };
 
-const applySheetStateToModules = (commit, sheetState = {}) => {
-  commit("income/replaceState", sheetState.income ? clone(sheetState.income) : {}, { root: true });
-  commit("expenses/replaceState", sheetState.expenses ? clone(sheetState.expenses) : {}, { root: true });
-  commit("liabilities/replaceState", sheetState.liabilities ? clone(sheetState.liabilities) : {}, { root: true });
-  commit("assets/replaceState", sheetState.assets ? clone(sheetState.assets) : {}, { root: true });
-  const investmentsState = sheetState.investments ? sanitizeInvestmentsForSave(sheetState.investments) : {};
-  commit("investments/replaceState", investmentsState, { root: true });
-  commit("meta/replaceState", sheetState.meta ? clone(sheetState.meta) : {}, { root: true });
-  commit("fasttrack/replaceState", sheetState.fasttrack ? clone(sheetState.fasttrack) : {}, { root: true });
+const buildSheetState = rootState =>
+  normalizeSheetState({
+    income: rootState.income,
+    expenses: rootState.expenses,
+    liabilities: rootState.liabilities,
+    assets: rootState.assets,
+    investments: rootState.investments,
+    meta: rootState.meta,
+    fasttrack: rootState.fasttrack
+  });
+
+const applySheetStateToModules = (commit, sheetState = {}, options = {}) => {
+  const { setBaseline = true } = options;
+  const normalized = normalizeSheetState(sheetState);
+  commit("income/replaceState", normalized.income, { root: true });
+  commit("expenses/replaceState", normalized.expenses, { root: true });
+  commit("liabilities/replaceState", normalized.liabilities, { root: true });
+  commit("assets/replaceState", normalized.assets, { root: true });
+  commit("investments/replaceState", normalized.investments, { root: true });
+  commit("meta/replaceState", normalized.meta, { root: true });
+  commit("fasttrack/replaceState", normalized.fasttrack, { root: true });
+  if (setBaseline) {
+    commit("SET_ACTIVE_SHEET_BASELINE", clone(normalized));
+  }
 };
 
 const initialRootState = () => ({
@@ -79,7 +86,8 @@ const initialRootState = () => ({
     leaderboard: false
   },
   error: null,
-  displaySheet: "Rat Race"
+  displaySheet: "Rat Race",
+  activeSheetBaseline: normalizeSheetState()
 });
 
 export default new Vuex.Store({
@@ -110,7 +118,8 @@ export default new Vuex.Store({
       const game = getters.activeGame;
       if (!game || !state.activePlayerId) return null;
       return game.players?.find(player => player.id === state.activePlayerId) || null;
-    }
+    },
+    currentSheetState: (_state, _getters, rootState) => buildSheetState(rootState)
   },
   mutations: {
     SET_VIEW: (state, view) => {
@@ -164,6 +173,9 @@ export default new Vuex.Store({
     },
     SET_ERROR: (state, error) => {
       state.error = error;
+    },
+    SET_ACTIVE_SHEET_BASELINE: (state, baseline) => {
+      state.activeSheetBaseline = baseline;
     }
   },
   actions: {
@@ -258,6 +270,7 @@ export default new Vuex.Store({
         });
         commit("UPDATE_ACTIVE_PLAYER", { ...player, sheetState });
         commit("UPSERT_GAME", { ...state.activeGame, updatedAt: player.lastModifiedAt });
+        commit("SET_ACTIVE_SHEET_BASELINE", clone(sheetState));
         return player;
       } catch (error) {
         commit("SET_ERROR", error.message || "Failed to save player sheet");
