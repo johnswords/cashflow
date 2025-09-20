@@ -1,21 +1,6 @@
 # CashFlow!
 
-A game sheet that does the calculations for you.
-
----
-
-## Playing
-
-[Run it right now in your browser](https://nathanstrutz.github.io/cashflow-balance-sheet/)!
-
-Did you...
-
-- Play CashFlow and run out of game sheets?
-- Need some replacement CashFlow Rat Race game sheets?
-- Decide that you want to be rich but hate math?
-- Just want an interactive, printable, mobile friendly CashFlow game sheet?
-
-Well then I made this just for you. I mean, really I made it for me, but we can share.
+A game manager that does the calculations for you.  Forked from  https://nathanstrutz.github.io/cashflow-balance-sheet/
 
 ---
 
