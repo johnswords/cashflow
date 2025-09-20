@@ -1,4 +1,4 @@
-const initialState = () => ({
+export const initialMetaState = () => ({
   profession: "",
   player: "",
   auditor: ""
@@ -6,10 +6,12 @@ const initialState = () => ({
 
 export default {
   namespaced: true,
-  state: initialState(),
+  state: initialMetaState(),
   mutations: {
     changeProfession: (state, payload) => (state.profession = payload),
     changePlayer: (state, payload) => (state.player = payload),
-    changeAuditor: (state, payload) => (state.auditor = payload)
+    changeAuditor: (state, payload) => (state.auditor = payload),
+    resetState: state => Object.assign(state, initialMetaState()),
+    replaceState: (state, payload = {}) => Object.assign(state, initialMetaState(), payload)
   }
 };

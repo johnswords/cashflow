@@ -1,11 +1,13 @@
-const initialState = () => ({
+export const initialAssetsState = () => ({
   savings: 0
 });
 
 export default {
   namespaced: true,
-  state: initialState(),
+  state: initialAssetsState(),
   mutations: {
-    changeSavings: (state, payload) => (state.savings = payload)
+    changeSavings: (state, payload) => (state.savings = payload),
+    resetState: state => Object.assign(state, initialAssetsState()),
+    replaceState: (state, payload = {}) => Object.assign(state, initialAssetsState(), payload)
   }
 };

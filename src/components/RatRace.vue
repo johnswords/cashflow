@@ -1,6 +1,5 @@
 <template>
-  <div>
-    <header-menu />
+  <div class="rat-race">
     <rat-race-header />
     <statement-area />
     <balance-sheet-cash-flow />
@@ -15,14 +14,16 @@ import StatementArea from "@/components/ratrace/statement/StatementArea.vue";
 import BalanceSheetCashFlow from "@/components/ratrace/BalanceSheetCashFlow.vue";
 import BalanceSheetArea from "@/components/ratrace/balancesheet/BalanceSheetArea.vue";
 import ModalWindowLoader from "@/components/application/ModalWindowLoader.vue";
-import HeaderMenu from "@/components/application/HeaderMenu.vue";
 
 export default {
-  components: { RatRaceHeader, StatementArea, BalanceSheetCashFlow, BalanceSheetArea, ModalWindowLoader, HeaderMenu }
+  components: { RatRaceHeader, StatementArea, BalanceSheetCashFlow, BalanceSheetArea, ModalWindowLoader }
 };
 </script>
 
 <style lang="scss">
+.rat-race {
+  position: relative;
+}
 #income-summary,
 #expense-summary,
 .total-io {

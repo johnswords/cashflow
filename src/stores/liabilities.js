@@ -1,4 +1,4 @@
-const initialState = () => ({
+export const initialLiabilitiesState = () => ({
   mortgage: 0,
   schoolLoan: 0,
   carLoan: 0,
@@ -9,13 +9,15 @@ const initialState = () => ({
 
 export default {
   namespaced: true,
-  state: initialState(),
+  state: initialLiabilitiesState(),
   mutations: {
     changeMortgage: (state, { value }) => (state.mortgage = value),
     changeSchoolLoan: (state, { value }) => (state.schoolLoan = value),
     changeCarLoan: (state, { value }) => (state.carLoan = value),
     changeCreditCard: (state, { value }) => (state.creditCard = value),
     changeRetail: (state, { value }) => (state.retail = value),
-    changeBankLoan: (state, { value }) => (state.bankLoan = value)
+    changeBankLoan: (state, { value }) => (state.bankLoan = value),
+    resetState: state => Object.assign(state, initialLiabilitiesState()),
+    replaceState: (state, payload = {}) => Object.assign(state, initialLiabilitiesState(), payload)
   }
 };

@@ -1,4 +1,4 @@
-const initialState = () => ({
+export const initialIncomeState = () => ({
   salary: { note: "", value: 0 },
   interest: { note: "", value: 0 },
   // Yes "interest2" - not everything has to be fully dynamic.
@@ -8,10 +8,12 @@ const initialState = () => ({
 
 export default {
   namespaced: true,
-  state: initialState(),
+  state: initialIncomeState(),
   mutations: {
     changeSalary: (state, payload) => (state.salary = { ...state.salary, ...payload }),
     changeInterest: (state, payload) => (state.interest = { ...state.interest, ...payload }),
-    changeInterest2: (state, payload) => (state.interest2 = { ...state.interest2, ...payload })
+    changeInterest2: (state, payload) => (state.interest2 = { ...state.interest2, ...payload }),
+    resetState: state => Object.assign(state, initialIncomeState()),
+    replaceState: (state, payload = {}) => Object.assign(state, initialIncomeState(), payload)
   }
 };

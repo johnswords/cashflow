@@ -1,122 +1,77 @@
 <template>
-  <component :is="sheet" />
+  <div id="app" :class="['view-' + currentView]">
+    <component
+      :is="activeComponent"
+      @end-game="handleEndGame"
+    />
+  </div>
 </template>
 
 <script>
-import RatRace from "@/components/RatRace.vue";
-import FastTrack from "@/components/FastTrack.vue";
 import { mapState } from "vuex";
+import LoadScreen from "@/components/app/LoadScreen.vue";
+import NewGameSetup from "@/components/app/NewGameSetup.vue";
+import GameList from "@/components/app/GameList.vue";
+import GameScreen from "@/components/app/GameScreen.vue";
+import PlayerSheetView from "@/components/app/PlayerSheetView.vue";
+import LeaderboardView from "@/components/app/LeaderboardView.vue";
+
+const VIEW_COMPONENTS = {
+  "load-screen": LoadScreen,
+  "new-game-setup": NewGameSetup,
+  "game-list": GameList,
+  "game-screen": GameScreen,
+  "player-sheet": PlayerSheetView,
+  leaderboard: LeaderboardView
+};
 
 export default {
-  name: "app",
-  components: { RatRace },
+  name: "CashflowApp",
+  components: VIEW_COMPONENTS,
   computed: {
-    ...mapState(["displaySheet"]),
-    sheet() {
-      return this.displaySheet === "Rat Race" ? RatRace : FastTrack;
+    ...mapState({
+      currentView: state => state.currentView
+    }),
+    activeComponent() {
+      return VIEW_COMPONENTS[this.currentView] || LoadScreen;
+    }
+  },
+  created() {
+    if (!this.currentView) {
+      this.$store.commit("SET_VIEW", "load-screen");
+    }
+  },
+  methods: {
+    async handleEndGame() {
+      const player = this.$store.getters.activePlayer;
+      if (!player) return;
+      const shouldEnd = window.confirm(`End the game and crown ${player.name}?`);
+      if (!shouldEnd) return;
+      const comment = window.prompt("Winner comment (optional)", "");
+      try {
+        await this.$store.dispatch("completeGame", {
+          winnerPlayerId: player.id,
+          winnerComment: comment || undefined
+        });
+        await this.$store.dispatch("fetchLeaderboard");
+      } catch (error) {
+        // handled via store error state
+      }
     }
   }
 };
 </script>
 
 <style lang="scss">
-html {
-  font: normal 16px Georgia, Times, serif;
-  color: #000;
-  background-color: #fff;
-}
+@import url("https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap");
 
-input {
-  font-size: 0.9rem;
-}
-input[type="text"] {
-  border: 0;
-  border-bottom: 2px solid #777;
-  border-left: 1px dashed #ccc;
-  box-sizing: border-box;
-  width: 100%;
-  min-width: 5px;
-  padding: 4px 10px 6px 10px;
-  margin: 0 0 0 5px;
-}
-input[type="text"]:hover,
-input[type="text"]:active {
-  border-bottom-color: #000;
-  border-left-color: #888;
+#app {
+  min-height: 100vh;
+  background: #040008;
+  color: #fdf9ff;
 }
 
 button {
-  cursor: pointer;
-}
-
-h3.column-title-bar {
-  background-color: #000;
-  color: #fff;
-  text-align: center;
-  margin: 0;
-  padding: 3px;
-}
-
-table {
-  flex: 1 1 100%;
-
-  &.line-inputs {
-    border: 2px solid #000;
-    width: 100%;
-  }
-  &.line-inputs td {
-    padding: 0.3rem;
-  }
-
-  &.line-inputs tr td:last-of-type {
-    width: 30%;
-  }
-  &.line-inputs tr.blank-line-input td:first-child input {
-    margin-left: 0;
-  }
-}
-#income-summary,
-#expense-summary,
-.total-io {
-  font-family: sans-serif;
-}
-
-.total-io {
-  display: flex;
-  font-weight: 800;
-  padding: 0 0 0 50%;
-  label {
-    flex: 0 0 110px;
-  }
-  sub {
-    display: block;
-    color: #666;
-  }
-}
-
-.numeric {
-  text-align: right;
-}
-
-input[readonly]:hover,
-input[readonly]:active,
-input[readonly]:focus {
-  background-color: rgb(255, 248, 236);
-  cursor: default;
-}
-
-@media print {
-  html {
-    font-size: 18px;
-  }
-  input[type="text"] {
-    border-left-width: 0;
-  }
-  .no-print {
-    display: none !important;
-  }
-  input {
-    color: #fff;
-  }
+  font-family: inherit;
 }
 </style>

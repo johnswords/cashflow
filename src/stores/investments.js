@@ -2,7 +2,7 @@ const newStock = () => ({ name: "", shares: 0, costPerShare: 0 });
 const newRealEstate = () => ({ name: "", downPayment: 0, cost: 0, mortgage: 0, income: 0 });
 const newBusiness = () => ({ name: "", downPayment: 0, cost: 0, liability: 0, income: 0 });
 
-const initialState = () => ({
+export const initialInvestmentsState = () => ({
   realEstate: [newRealEstate(), newRealEstate(), newRealEstate(), newRealEstate()],
   businesses: [newBusiness(), newBusiness()],
   stocks: [newStock(), newStock()],
@@ -15,7 +15,7 @@ const initialState = () => ({
 
 export default {
   namespaced: true,
-  state: initialState(),
+  state: initialInvestmentsState(),
   getters: {
     getStock: state => index => state.stocks[index],
     getRealEstate: state => index => state.realEstate[index],
@@ -88,6 +88,8 @@ export default {
 
     closeModal(state) {
       state.modal.show = false;
-    }
+    },
+    resetState: state => Object.assign(state, initialInvestmentsState()),
+    replaceState: (state, payload = {}) => Object.assign(state, initialInvestmentsState(), payload)
   }
 };

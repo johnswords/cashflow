@@ -1,4 +1,4 @@
-const initialState = () => ({
+export const initialExpensesState = () => ({
   taxes: { note: "", value: 0 },
   mortgage: { note: "", value: 0 },
   schoolLoan: { note: "", value: 0 },
@@ -13,7 +13,7 @@ const initialState = () => ({
 
 export default {
   namespaced: true,
-  state: initialState(),
+  state: initialExpensesState(),
   getters: {
     bankLoanAmount: (_state, _getters, rootState) => Math.round(rootState.liabilities.bankLoan / 10)
   },
@@ -29,6 +29,8 @@ export default {
     changeMiscellaneousExpense: (state, payload) => (state.miscellaneousExpense = { ...state.miscellaneousExpense, ...payload }),
     changeChildNote: (state, payload) => (state.children.note = payload),
     changeNumberOfChildren: (state, payload) => (state.children.numberOfChildren = payload),
-    changePerChildExpense: (state, payload) => (state.children.perChildExpense = payload)
+    changePerChildExpense: (state, payload) => (state.children.perChildExpense = payload),
+    resetState: state => Object.assign(state, initialExpensesState()),
+    replaceState: (state, payload = {}) => Object.assign(state, initialExpensesState(), payload)
   }
 };
