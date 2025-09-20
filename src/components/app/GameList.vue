@@ -67,12 +67,12 @@ export default {
     },
     viewAudit(game) {
       this.$store.dispatch("loadGame", game.id).then(() => {
-        this.$store.dispatch("fetchAudit", { reset: true });
+        this.$store.dispatch("openAuditLog");
       });
     },
     endGame(game) {
       this.$store.dispatch("loadGame", game.id).then(() => {
-        this.$store.dispatch("navigate", "game-screen");
+        this.$store.dispatch("openEndGameModal");
       });
     }
   }

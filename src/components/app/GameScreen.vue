@@ -6,6 +6,7 @@
         <p>Started {{ formatDate(game.createdAt) }} · Last updated {{ formatDate(game.updatedAt) }}</p>
       </div>
       <div class="game-screen__actions">
+        <audio-toggle />
         <button @click="goBack">Menu</button>
         <button @click="openLeaderboard" :disabled="isLeaderboardLoading">Leaderboard</button>
         <button @click="triggerEndGame" :disabled="game.status === 'completed'">End Game</button>
@@ -57,6 +58,18 @@
           <button @click="openSheet(player)">Open Sheet</button>
           <button @click="viewAuditLog(player)" class="ghost">Audit Log</button>
         </footer>
+        <section v-if="recentChanges(player).length" class="player-card__recent">
+          <h4>Recent Changes</h4>
+          <ul>
+            <li v-for="entry in recentChanges(player)" :key="entry.id">
+              <span class="time">{{ formatTime(entry.timestamp) }}</span>
+              <span class="type" :class="entry.entryType">{{ entry.entryType }}</span>
+              <span class="fields">
+                {{ entry.fieldPaths.map(formatFieldPath).join(', ') }}
+              </span>
+            </li>
+          </ul>
+        </section>
       </article>
     </section>
   </div>
@@ -67,16 +80,29 @@
 </template>
 
 <script>
-import { mapState } from "vuex";
+import { mapState, mapGetters } from "vuex";
 import { computeSummary } from "@/utils/cashflow";
+import AudioToggle from "@/components/app/AudioToggle.vue";
+
+const SECTION_LABELS = {
+  income: "Income",
+  expenses: "Expenses",
+  liabilities: "Liabilities",
+  assets: "Assets",
+  investments: "Investments",
+  meta: "Profile",
+  fasttrack: "Fast Track"
+};
 
 export default {
   name: "GameScreen",
+  components: { AudioToggle },
   computed: {
     ...mapState({
       game: state => state.activeGame,
       isLeaderboardLoading: state => state.loading.leaderboard
-    })
+    }),
+    ...mapGetters(["auditEntriesByPlayer"])
   },
   methods: {
     formatDate(value) {
@@ -85,6 +111,26 @@ export default {
     },
     formatCurrency(value) {
       return new Intl.NumberFormat("en-US", { style: "currency", currency: "USD" }).format(Number(value || 0));
+    },
+    formatTime(value) {
+      return new Date(value).toLocaleTimeString();
+    },
+    formatFieldPath(path) {
+      if (!path) return "";
+      const segments = path.split(".");
+      if (!segments.length) return path;
+      const [head, ...rest] = segments;
+      const formatted = [SECTION_LABELS[head] || this.startCase(head), ...rest.map(this.startCase)];
+      return formatted.join(" → ");
+    },
+    startCase(value) {
+      if (!value) return "";
+      return value
+        .replace(/([A-Z])/g, " $1")
+        .replace(/[_-]/g, " ")
+        .replace(/\s+/g, " ")
+        .trim()
+        .replace(/^./, char => char.toUpperCase());
     },
     summary(player) {
       return computeSummary(player.sheetState || {});
@@ -96,15 +142,17 @@ export default {
       this.$store.dispatch("fetchLeaderboard");
     },
     triggerEndGame() {
-      this.$emit("end-game");
+      this.$store.dispatch("openEndGameModal");
     },
     openSheet(player) {
       this.$store.dispatch("selectPlayer", player.id);
       this.$store.dispatch("navigate", "player-sheet");
     },
     viewAuditLog(player) {
-      this.$store.dispatch("selectPlayer", player.id);
-      this.$store.dispatch("fetchAudit", { reset: true });
+      this.$store.dispatch("openAuditLog", player.id);
+    },
+    recentChanges(player) {
+      return this.auditEntriesByPlayer(player.id).slice(0, 3);
     }
   }
 };
@@ -139,6 +187,7 @@ export default {
 .game-screen__actions {
   display: flex;
   gap: 1rem;
+  align-items: center;
 }
 
 .game-screen__actions button {
@@ -238,6 +287,54 @@ export default {
 .player-card__actions .ghost {
   border-color: rgba(156, 39, 176, 0.6);
   color: rgba(156, 39, 176, 0.85);
+}
+
+.player-card__recent {
+  border-top: 1px solid rgba(244, 211, 94, 0.2);
+  padding-top: 1rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.65rem;
+}
+
+.player-card__recent h4 {
+  margin: 0 0 0.6rem;
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.player-card__recent ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 0.45rem;
+}
+
+.player-card__recent li {
+  display: grid;
+  grid-template-columns: auto auto 1fr;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.player-card__recent .time {
+  opacity: 0.7;
+}
+
+.player-card__recent .type.correction {
+  color: #9cff94;
+}
+
+.player-card__recent .type.turn {
+  color: rgba(244, 211, 94, 0.9);
+}
+
+.player-card__recent .fields {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 }
 
 .game-screen__empty {

@@ -87,7 +87,17 @@ const initialRootState = () => ({
   },
   error: null,
   displaySheet: "Rat Race",
-  activeSheetBaseline: normalizeSheetState()
+  activeSheetBaseline: normalizeSheetState(),
+  activeAuditPlayerId: null,
+  pendingAuditContext: null,
+  endGameForm: { winnerPlayerId: null, winnerComment: "" },
+  ui: {
+    auditModal: false,
+    endGameModal: false
+  },
+  preferences: {
+    audioEnabled: true
+  }
 });
 
 export default new Vuex.Store({
@@ -119,7 +129,15 @@ export default new Vuex.Store({
       if (!game || !state.activePlayerId) return null;
       return game.players?.find(player => player.id === state.activePlayerId) || null;
     },
-    currentSheetState: (_state, _getters, rootState) => buildSheetState(rootState)
+    currentSheetState: (_state, _getters, rootState) => buildSheetState(rootState),
+    auditEntries: state => state.auditEntries,
+    auditEntriesByPlayer: state => playerId =>
+      state.auditEntries.filter(entry => entry.playerId === playerId).slice(0, 10),
+    pendingAuditContext: state => state.pendingAuditContext,
+    isAuditModalOpen: state => state.ui.auditModal,
+    isEndGameModalOpen: state => state.ui.endGameModal,
+    endGameForm: state => state.endGameForm,
+    isAudioEnabled: state => state.preferences.audioEnabled
   },
   mutations: {
     SET_VIEW: (state, view) => {
@@ -141,6 +159,14 @@ export default new Vuex.Store({
     },
     SET_ACTIVE_GAME: (state, game) => {
       state.activeGame = game;
+      state.endGameForm = {
+        winnerPlayerId: game?.winnerPlayerId || game?.players?.[0]?.id || null,
+        winnerComment: game?.winnerComment || ""
+      };
+      state.activeAuditPlayerId = null;
+      state.pendingAuditContext = null;
+      state.ui.auditModal = false;
+      state.ui.endGameModal = false;
     },
     SET_ACTIVE_PLAYER: (state, playerId) => {
       state.activePlayerId = playerId;
@@ -176,6 +202,30 @@ export default new Vuex.Store({
     },
     SET_ACTIVE_SHEET_BASELINE: (state, baseline) => {
       state.activeSheetBaseline = baseline;
+    },
+    SET_ACTIVE_AUDIT_PLAYER: (state, playerId) => {
+      state.activeAuditPlayerId = playerId;
+    },
+    SHOW_AUDIT_MODAL: state => {
+      state.ui.auditModal = true;
+    },
+    HIDE_AUDIT_MODAL: state => {
+      state.ui.auditModal = false;
+    },
+    SET_PENDING_AUDIT_CONTEXT: (state, context) => {
+      state.pendingAuditContext = context;
+    },
+    SET_END_GAME_FORM: (state, payload) => {
+      state.endGameForm = { ...state.endGameForm, ...payload };
+    },
+    SHOW_END_GAME_MODAL: state => {
+      state.ui.endGameModal = true;
+    },
+    HIDE_END_GAME_MODAL: state => {
+      state.ui.endGameModal = false;
+    },
+    SET_AUDIO_ENABLED: (state, enabled) => {
+      state.preferences.audioEnabled = enabled;
     }
   },
   actions: {
@@ -206,7 +256,9 @@ export default new Vuex.Store({
           commit("SET_ACTIVE_PLAYER", null);
           applySheetStateToModules(commit, {});
         }
+        commit("SET_PENDING_AUDIT_CONTEXT", null);
         await dispatch("fetchGames");
+        await dispatch("fetchAudit", { reset: true });
         return game;
       } catch (error) {
         commit("SET_ERROR", error.message || "Failed to create game");
@@ -215,7 +267,7 @@ export default new Vuex.Store({
         commit("SET_LOADING", { key: "createGame", value: false });
       }
     },
-    async loadGame({ commit }, gameId) {
+    async loadGame({ commit, dispatch }, gameId) {
       commit("SET_LOADING", { key: "game", value: true });
       commit("SET_ERROR", null);
       try {
@@ -233,6 +285,7 @@ export default new Vuex.Store({
         }
         commit("SET_AUDIT_ENTRIES", []);
         commit("SET_AUDIT_PAGINATION", { offset: 0, endReached: false });
+        await dispatch("fetchAudit", { reset: true });
         return game;
       } catch (error) {
         commit("SET_ERROR", error.message || "Failed to load game");
@@ -243,6 +296,7 @@ export default new Vuex.Store({
     },
     selectPlayer({ commit, getters, dispatch }, playerId) {
       commit("SET_ACTIVE_PLAYER", playerId);
+      commit("SET_PENDING_AUDIT_CONTEXT", null);
       dispatch("hydrateActivePlayer", playerId);
       commit("SET_VIEW", "player-sheet");
     },
@@ -256,7 +310,7 @@ export default new Vuex.Store({
         applySheetStateToModules(commit, player.sheetState || {});
       }
     },
-    async savePlayerSheet({ state, commit, rootState }, { audit }) {
+    async savePlayerSheet({ state, commit, rootState, dispatch }, { audit }) {
       if (!state.activeGame || !state.activePlayerId) {
         throw new Error("No active game or player selected");
       }
@@ -271,6 +325,8 @@ export default new Vuex.Store({
         commit("UPDATE_ACTIVE_PLAYER", { ...player, sheetState });
         commit("UPSERT_GAME", { ...state.activeGame, updatedAt: player.lastModifiedAt });
         commit("SET_ACTIVE_SHEET_BASELINE", clone(sheetState));
+        commit("SET_PENDING_AUDIT_CONTEXT", null);
+        await dispatch("fetchAudit", { reset: true });
         return player;
       } catch (error) {
         commit("SET_ERROR", error.message || "Failed to save player sheet");
@@ -342,9 +398,60 @@ export default new Vuex.Store({
     resetSheetToDefaults({ commit }) {
       applySheetStateToModules(commit, {});
       commit("SET_DISPLAY_SHEET", "Rat Race");
+      commit("SET_PENDING_AUDIT_CONTEXT", null);
     },
     navigate({ commit }, view) {
       commit("SET_VIEW", view);
+    },
+    openAuditLog({ commit, dispatch, state }, playerId = null) {
+      const targetPlayerId = playerId || state.activePlayerId || null;
+      commit("SET_ACTIVE_AUDIT_PLAYER", targetPlayerId);
+      commit("SHOW_AUDIT_MODAL");
+      dispatch("fetchAudit", { reset: true });
+    },
+    closeAuditLog({ commit }) {
+      commit("HIDE_AUDIT_MODAL");
+      commit("SET_ACTIVE_AUDIT_PLAYER", null);
+    },
+    startCorrection({ commit }, entry) {
+      if (!entry) return;
+      commit("SET_PENDING_AUDIT_CONTEXT", { type: "correction", originEntryId: entry.id });
+      commit("SET_ACTIVE_AUDIT_PLAYER", entry.playerId);
+      commit("SET_ACTIVE_PLAYER", entry.playerId);
+      applySheetStateToModules(commit, entry.afterSnapshot || {});
+      commit("UPDATE_ACTIVE_PLAYER", { id: entry.playerId, sheetState: entry.afterSnapshot || {} });
+      commit("HIDE_AUDIT_MODAL");
+      commit("SET_VIEW", "player-sheet");
+    },
+    clearAuditContext({ commit }) {
+      commit("SET_PENDING_AUDIT_CONTEXT", null);
+    },
+    openEndGameModal({ commit, state }) {
+      if (state.activeGame?.players?.length && !state.endGameForm.winnerPlayerId) {
+        commit("SET_END_GAME_FORM", { winnerPlayerId: state.activeGame.players[0].id });
+      }
+      commit("SHOW_END_GAME_MODAL");
+    },
+    closeEndGameModal({ commit }) {
+      commit("HIDE_END_GAME_MODAL");
+    },
+    updateEndGameForm({ commit }, payload) {
+      commit("SET_END_GAME_FORM", payload);
+    },
+    async submitEndGame({ state, commit, dispatch }) {
+      if (!state.activeGame) throw new Error("No active game selected");
+      const payload = {
+        winnerPlayerId: state.endGameForm.winnerPlayerId,
+        winnerComment: state.endGameForm.winnerComment || undefined
+      };
+      await dispatch("completeGame", payload);
+      commit("HIDE_END_GAME_MODAL");
+      await dispatch("fetchLeaderboard");
+      await dispatch("fetchGames");
+    },
+    toggleAudio({ state, commit }, enabled) {
+      const next = typeof enabled === "boolean" ? enabled : !state.preferences.audioEnabled;
+      commit("SET_AUDIO_ENABLED", next);
     }
   },
   modules: {

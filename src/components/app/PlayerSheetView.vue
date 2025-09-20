@@ -6,6 +6,7 @@
         <p>Color: <span :style="{ color: player.color }">{{ player.color }}</span></p>
       </div>
       <div class="player-sheet__controls">
+        <audio-toggle />
         <button class="ghost" @click="backToGame" :disabled="isSaving">Back to Game</button>
         <button class="ghost" @click="toggleSheet">Switch Sheet</button>
         <button @click="saveChanges" :disabled="isSaving">Save &amp; Return</button>
@@ -35,6 +36,19 @@
               <span class="diff-after">{{ formatValue(change.after) }}</span>
             </li>
           </ul>
+          <label
+            v-if="pendingDiff.changes.length"
+            class="correction-toggle"
+            :class="{ locked: pendingAuditContext?.type === 'correction' }"
+          >
+            <input
+              type="checkbox"
+              :checked="isCorrection"
+              @change="toggleCorrection"
+              :disabled="pendingAuditContext?.type === 'correction'"
+            />
+            <span>Log this as a correction</span>
+          </label>
           <footer class="confirm-modal__actions">
             <button class="ghost" @click="cancelConfirm" :disabled="isSaving">Cancel</button>
             <button @click="confirmSave" :disabled="isSaving">Confirm Save</button>
@@ -54,14 +68,17 @@ import { mapState, mapGetters } from "vuex";
 import RatRace from "@/components/RatRace.vue";
 import FastTrack from "@/components/FastTrack.vue";
 import { diffSheets } from "@/utils/diff";
+import { playSound } from "@/utils/audio";
+import AudioToggle from "@/components/app/AudioToggle.vue";
 
 export default {
   name: "PlayerSheetView",
-  components: { RatRace, FastTrack },
+  components: { RatRace, FastTrack, AudioToggle },
   data() {
     return {
       showConfirmModal: false,
-      pendingDiff: { changes: [], fieldPaths: [], beforeSnapshot: {}, afterSnapshot: {} }
+      pendingDiff: { changes: [], fieldPaths: [], beforeSnapshot: {}, afterSnapshot: {} },
+      markAsCorrection: false
     };
   },
   computed: {
@@ -71,17 +88,33 @@ export default {
       error: state => state.error,
       baseline: state => state.activeSheetBaseline
     }),
-    ...mapGetters(["activePlayer", "currentSheetState"]),
+    ...mapGetters(["activePlayer", "currentSheetState", "pendingAuditContext"]),
     player() {
       return this.activePlayer;
     },
     sheetComponent() {
       return this.displaySheet === "Fast Track" ? "FastTrack" : "RatRace";
+    },
+    isCorrection() {
+      if (this.pendingAuditContext?.type === "correction") return true;
+      return this.markAsCorrection;
+    },
+    auditEntryType() {
+      return this.isCorrection ? "correction" : "turn";
+    }
+  },
+  watch: {
+    pendingAuditContext: {
+      immediate: true,
+      handler(context) {
+        this.markAsCorrection = context?.type === "correction";
+      }
     }
   },
   methods: {
     backToGame() {
       this.$store.dispatch("navigate", "game-screen");
+      this.$store.dispatch("clearAuditContext");
     },
     toggleSheet() {
       const next = this.displaySheet === "Rat Race" ? "Fast Track" : "Rat Race";
@@ -93,6 +126,7 @@ export default {
       const diff = diffSheets(baseline, current);
 
       if (!diff.changes.length) {
+        this.$store.dispatch("clearAuditContext");
         this.backToGame();
         return;
       }
@@ -121,20 +155,29 @@ export default {
     },
     async confirmSave() {
       const audit = {
-        entryType: "turn",
+        entryType: this.auditEntryType,
         fieldPaths: this.pendingDiff.fieldPaths.length ? this.pendingDiff.fieldPaths : ["sheet"],
         beforeSnapshot: this.pendingDiff.beforeSnapshot,
-        afterSnapshot: this.pendingDiff.afterSnapshot
+        afterSnapshot: this.pendingDiff.afterSnapshot,
+        originEntryId: this.pendingAuditContext?.originEntryId
       };
 
       try {
         await this.$store.dispatch("savePlayerSheet", { audit });
         this.showConfirmModal = false;
         this.pendingDiff = { changes: [], fieldPaths: [], beforeSnapshot: {}, afterSnapshot: {} };
+        playSound("save");
         this.backToGame();
       } catch (error) {
         // error state handled via Vuex
       }
+    },
+    toggleCorrection(event) {
+      if (this.pendingAuditContext?.type === "correction") {
+        this.markAsCorrection = true;
+        return;
+      }
+      this.markAsCorrection = event.target.checked;
     }
   }
 };
@@ -244,6 +287,13 @@ export default {
   font-size: 1rem;
 }
 
+.confirm-modal__panel p {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.75rem;
+  opacity: 0.8;
+  margin-bottom: 1rem;
+}
+
 .confirm-modal__diff-list {
   list-style: none;
   padding: 0;
@@ -285,6 +335,23 @@ export default {
   display: flex;
   justify-content: flex-end;
   gap: 1rem;
+}
+
+.confirm-modal__actions .correction-toggle {
+  margin-right: auto;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.7rem;
+}
+
+.confirm-modal__actions .correction-toggle input {
+  transform: scale(1.2);
+}
+
+.confirm-modal__actions .correction-toggle.locked {
+  opacity: 0.65;
 }
 
 .confirm-modal__actions button {
