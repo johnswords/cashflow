@@ -1,69 +1,101 @@
-# Engineering Playbook
+# AGENTS.md
+
+Read README.md for project overview. This file contains coding style and commit message guidelines.
 
 ## Project Overview
-- Vue 2 application (`src/main.js`, `src/App.vue`) renders retro-inspired flows for Cashflow game management.
-- Vuex (`src/store.js`) orchestrates multiplayer state: view routing, sheet normalization, audit logging, modals, audio prefs.
-- Backend lives in `src/backend/` (Koa + better-sqlite3 via Kysely) and exposes `/api/*` routes for games, players, audits, leaderboard.
-- SQLite database stored at `data/cashflow.sqlite` (gitignored, WAL mode). Use migration scripts to evolve schema.
 
-## Development Workflow
-| Task | Command |
-| --- | --- |
-| Install deps | `npm install` |
-| Run migrations | `npm run backend:migrate` |
-| Start API (4000) | `npm run backend:dev` |
-| Start frontend (8080) | `npm run serve` |
-| Production build | `npm run build` |
-| Seed data | `npm run backend:seed` (stub – extend when needed) |
+A Vue 2 web application that provides an interactive digital game sheet for the CashFlow board game. It helps players track income, expenses, assets, and liabilities without manual calculations, supporting both "Rat Race" and "Fast Track" game modes.
 
-Always keep backend + frontend running together for multiplayer flows. Proxy is configured in `vue.config.js`.
+## Development Commands
 
-## Coding Standards
-- Use Vue SFC order `<template>`, `<script>`, `<style lang="scss">`. Two-space indent.
-- Prefer composable helpers in `src/utils/` (diffing, cashflow math, audio).
-- Vuex mutations/actions should stay pure and commit-friendly—avoid direct async inside mutations.
-- Normalize sheet state before saving (see `buildSheetState`/`applySheetStateToModules`).
-- Audio helpers should route through `playSound`/`setAudioEnabled` to respect user preferences.
+```bash
+# Install dependencies
+npm install
 
-## Backend Guidelines
-- Add migrations in `src/backend/db/migrations` (timestamp-named JS files using Kysely schema builder).
-- Wrap multi-entity writes in transactions (`db.transaction().execute`).
-- Keep route modules small: input validation with Zod (`src/backend/validators`), serialization helpers for DB rows.
-- Return ISO timestamps; frontend expects `createdAt`, `updatedAt`, etc.
+# Run development server with hot reload (port 8080)
+npm run serve
 
-## UI / UX Notes
-- Retro aesthetic: `Press Start 2P` font, neon gradients, 80s palette.
-- Audio toggle (`AudioToggle.vue`) should be visible on major screens.
-- Confirmation modals must surface diff summaries before committing changes.
-- Audit modal (`AuditLogModal.vue`) is the single source of truth for history; corrections bounce users into sheet editor with prefilled state.
-- End game modal captures winner + comment and shows summary stats before committing.
+# Build for production
+npm run build
 
-## Testing & QA
-- Automated tests pending; document manual verification in PR descriptions.
-- Before submitting PRs: run `npm run backend:migrate` (ensures schema), then `npm run build` (catches compilation issues despite Sass deprecation warnings).
-- Check audit log after major flows (create → save → correction → end game) to ensure IDs/timestamps look sane.
-
-## Git & PR Hygiene
-- Use imperative commit messages (`feat: add audit modal`).
-- Group backend/ frontend changes logically; avoid large mixed commits if possible.
-- Include screenshots/GIFs for UI updates (retro theme changes matter); list manual test cases executed.
-
-## State & Data Flow Reference
+# Deploy to GitHub Pages (from gh-pages branch)
+git checkout gh-pages
+git merge vue
+# Edit vue.config.js and add: publicPath: "/cashflow-balance-sheet"
+npm run build
+git add dist/*
+git commit -m "Building"
+git subtree push --prefix dist origin gh-pages
 ```
-Vuex root state
-├─ currentView (load-screen, new-game-setup, game-list, game-screen, player-sheet, leaderboard)
-├─ games[]           # fetched summaries
-├─ activeGame        # detailed game with players[]
-├─ activePlayerId    # selected player for sheet view
-├─ auditEntries[]    # paginated history for current game
-├─ leaderboard[]
-├─ endGameForm       # winner/comment draft
-├─ ui                # modal visibility flags
-└─ preferences.audioEnabled
-```
-Persisted sheet structure mirrors legacy modules (income/expenses/etc.) and is stored as JSON blobs per player.
 
-## Outstanding Work (See `TODO.md` for granular list)
-- Leaderboard polish, timers, responsive scaling, richer audit diff labels for nested assets.
+## Architecture Overview
 
-Stay consistent, keep the retro vibe alive, and document gameplay impact as we ship new features.
+### Core Application Structure
+
+**Vue 2 + Vuex Architecture**: The app uses a centralized Vuex store with modular state management. All financial data flows through the store with computed getters for derived values (passive income, cash flow, etc.).
+
+**Two-Mode System**:
+- **Rat Race**: Main gameplay sheet with income statement and balance sheet
+- **Fast Track**: Simplified interface for when players escape the rat race (winning condition)
+
+### State Management Pattern
+
+The Vuex store (`src/store.js`) orchestrates several modules:
+- `income`: Salary and passive income sources
+- `expenses`: All expense categories including dynamic child expenses
+- `liabilities`: Debts and loans
+- `assets`: Current asset values
+- `investments`: Real estate, businesses, and stocks with modal management
+- `fasttrack`: Fast track mode specific state
+- `meta`: Player metadata (name, profession, auditor)
+
+**Key Computed Properties**: The store centralizes complex calculations:
+- `passiveIncome`: Aggregates all non-salary income
+- `totalIncome`: Salary + passive income
+- `totalExpenses`: All expenses including dynamic bank loans
+- `cashFlow`: The critical metric (totalIncome - totalExpenses)
+
+### Component Hierarchy
+
+**Input Components** (`src/components/misc/`):
+- Custom input components (`DollarFormatInput`, `StateConnectedInput`) that auto-bind to Vuex state
+- Specialized inputs for business names, property names, and stock symbols
+- All inputs use two-way binding with Vuex mutations
+
+**Modal System**: Investment editing uses a centralized modal system managed through Vuex state (`investments.modal`). Modals for real estate, businesses, and stocks share state management patterns.
+
+### Persistence & Plugins
+
+**LocalStorage Plugin** (`src/stores/plugins/localstorage.js`): Auto-saves game state to browser storage on every mutation, with automatic restoration on page load.
+
+**Reset State Plugin** (`src/stores/plugins/resetstate.js`): Provides clean state reset functionality while preserving the localStorage plugin.
+
+### Styling Architecture
+
+- Global SCSS variables loaded via `palette.scss` (auto-imported in all components)
+- Print-optimized styles that hide controls and adjust formatting
+- Component-scoped styles with deep selectors for child component styling
+
+## Key Technical Patterns
+
+### Investment Management
+Each investment type (real estate, business, stock) follows a consistent pattern:
+1. Array storage with pre-allocated slots
+2. Modal-based editing with index tracking
+3. Automatic calculation of derived values (total cost, ROI, etc.)
+4. Dynamic row addition with minimum slot requirements
+
+### Reactive Calculations
+All totals and summaries use Vuex getters that automatically recalculate when underlying state changes. This ensures consistency across the entire sheet without manual updates.
+
+### State Mutation Pattern
+All state changes go through explicit Vuex mutations with descriptive names following the pattern: `change{Module}{Property}` (e.g., `changeStockShares`, `changeRealEstateName`).
+
+## Important Considerations
+
+- Vue 2 (not Vue 3) - uses Options API, not Composition API
+- No TypeScript - pure JavaScript with Vue single-file components
+- No testing framework configured - manual testing only
+- No linting configured beyond Prettier formatting rules
+- Browser localStorage is the only persistence mechanism
+- The `gh-pages` branch requires manual publicPath configuration for deployment

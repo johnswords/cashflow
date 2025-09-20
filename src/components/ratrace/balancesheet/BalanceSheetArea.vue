@@ -17,22 +17,16 @@ export default {
 };
 </script>
 
-<style lang="scss">
-/* 2nd grid for the bottom */
+<style scoped lang="scss">
 #balance-sheet-area {
   display: grid;
-  grid-template-columns: 1fr 1fr;
-  grid-template-rows: 1fr;
-  grid-template-areas: "assets liabilities";
-  border: 2px solid #000;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 1.75rem;
 }
 
-@media (max-width: 800px) {
+@media (min-width: 1300px) {
   #balance-sheet-area {
-    grid-template-columns: 1fr;
-    grid-template-areas:
-      "assets"
-      "liabilities";
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 }
 </style>

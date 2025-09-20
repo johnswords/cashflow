@@ -1,7 +1,7 @@
 <template>
-  <div class="row">
-    <h2>Balance Sheet</h2>
-    <monthly-cash-flow class="monthly-cash-flow-area" />
+  <div class="balance-sheet-header">
+    <h2 class="balance-sheet-header__title">Balance Sheet</h2>
+    <monthly-cash-flow class="balance-sheet-header__cashflow" />
   </div>
 </template>
 
@@ -13,38 +13,39 @@ export default {
 };
 </script>
 
-<style lang="scss" scoped>
-.row {
-  display: grid;
-  grid-template-columns: repeat(2, 1fr);
-  grid-template-rows: 1fr;
-  grid-column-gap: 20px;
-  grid-row-gap: 0px;
-  grid-template-areas: "balance-title cashflow-summary";
+<style scoped lang="scss">
+.balance-sheet-header {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1.5rem;
+}
 
-  h2 {
-    grid-area: balance-title;
-    vertical-align: bottom;
-    padding-top: 20px;
-    margin: 0;
-  }
-  .monthly-cash-flow-area {
-    grid-area: cashflow-summary;
-    padding-bottom: 10px;
-    padding-left: 30%;
-    display: flex;
-    align-items: center;
-  }
+.balance-sheet-header__title {
+  margin: 0;
+  font-family: "Press Start 2P", monospace;
+  font-size: 1.1rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 211, 94, 0.9);
+}
+
+.balance-sheet-header__cashflow {
+  flex: 1 1 260px;
+  display: flex;
+  justify-content: flex-end;
 }
 
 @media (max-width: 800px) {
-  .row {
-    grid-template-columns: 1fr;
-    grid-template-areas: "cashflow-summary" "balance-title";
+  .balance-sheet-header {
+    flex-direction: column;
+    align-items: flex-start;
   }
 
-  .monthly-cash-flow-area {
-    padding-left: 10% !important;
+  .balance-sheet-header__cashflow {
+    width: 100%;
+    justify-content: flex-start;
   }
 }
 </style>

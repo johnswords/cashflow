@@ -279,6 +279,8 @@ export default {
   display: flex;
   align-items: center;
   gap: 1.2rem;
+  flex-wrap: wrap;
+  justify-content: flex-end;
 }
 
 .player-sheet__controls button,
@@ -324,9 +326,9 @@ export default {
 
 .player-sheet__stats {
   width: 100%;
-  max-width: 1200px;
+  max-width: 1040px;
   margin: 0 auto 1.25rem;
-  padding: 0 3rem;
+  padding: 0 2rem;
   display: grid;
   gap: 1rem;
   grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
@@ -362,21 +364,49 @@ export default {
 .player-sheet__content {
   flex: 1;
   width: 100%;
-  padding: 0 3rem 3rem;
+  padding: 0 2.5rem 2.5rem;
   display: flex;
   justify-content: center;
 }
 
 .player-sheet__canvas {
-  width: min(100%, 1100px);
+  width: min(100%, 1040px);
   box-sizing: border-box;
   margin: 0 auto;
-  padding: 2.5rem 2.25rem 3rem;
-  background: rgba(8, 5, 24, 0.82);
+  padding: 2.25rem 2rem 2.5rem;
+  background: rgba(8, 5, 24, 0.9);
   border: 1px solid rgba(156, 39, 176, 0.35);
   border-radius: 22px;
   box-shadow: 0 18px 48px rgba(0, 0, 0, 0.35);
-  overflow-x: auto;
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+  overflow: hidden;
+}
+
+@media (max-width: 900px) {
+  .player-sheet__content {
+    padding: 0 2rem 2rem;
+  }
+
+  .player-sheet__stats {
+    padding: 0 2rem;
+  }
+}
+
+@media (max-width: 768px) {
+  .player-sheet__content {
+    padding: 0 1.25rem 1.75rem;
+  }
+
+  .player-sheet__canvas {
+    padding: 1.75rem 1.25rem 2rem;
+    border-radius: 18px;
+  }
+
+  .player-sheet__stats {
+    padding: 0 1.25rem;
+  }
 }
 
 .player-sheet__footer {

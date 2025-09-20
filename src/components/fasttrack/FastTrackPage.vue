@@ -1,22 +1,26 @@
 <template>
-  <div>
-    <section id="fasttrack-upper">
-      <div id="fast-track-congratulations">
-        <fast-track-congratulations />
-      </div>
-      <div id="your-buyout">
-        <your-buyout />
-      </div>
-      <div id="how-to-win">
-        <how-to-win />
-      </div>
-      <div id="explanation-of-100x">
-        <explanation-of-100x />
+  <div class="fast-track-page">
+    <section class="fast-track-page__section">
+      <div class="fast-track-page__grid">
+        <div class="fast-track-page__panel fast-track-page__panel--wide">
+          <fast-track-congratulations />
+        </div>
+        <div class="fast-track-page__panel">
+          <your-buyout />
+        </div>
+        <div class="fast-track-page__panel fast-track-page__panel--wide">
+          <how-to-win />
+        </div>
+        <div class="fast-track-page__panel">
+          <explanation-of-100x />
+        </div>
       </div>
     </section>
-    <main>
-      <income-record-area />
-    </main>
+    <section class="fast-track-page__section">
+      <div class="fast-track-page__panel fast-track-page__panel--records">
+        <income-record-area />
+      </div>
+    </section>
   </div>
 </template>
 
@@ -38,45 +42,105 @@ export default {
 };
 </script>
 
-<style>
-@media (min-width: 801px) {
-  section#fasttrack-upper {
-    display: grid;
-    grid-template-columns: 50fr 5fr 50fr;
-    grid-template-rows: repeat(2, auto);
-    grid-column-gap: 20px;
-    grid-row-gap: 20px;
+<style scoped lang="scss">
+.fast-track-page {
+  display: flex;
+  flex-direction: column;
+  gap: 2rem;
+}
+
+.fast-track-page__section {
+  background: linear-gradient(145deg, rgba(10, 6, 34, 0.92), rgba(4, 1, 14, 0.92));
+  border: 1px solid rgba(156, 39, 176, 0.35);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  padding: 2rem 2.25rem;
+  overflow: hidden;
+}
+
+.fast-track-page__grid {
+  display: grid;
+  gap: 1.75rem;
+  grid-template-columns: minmax(0, 1fr);
+}
+
+
+.fast-track-page__panel {
+  background: transparent;
+  border: 0;
+  padding: 0;
+  color: #f6f3ff;
+  font-family: "Press Start 2P", monospace;
+}
+
+.fast-track-page__panel--records {
+  padding: 0;
+}
+
+.fast-track-page__panel ::v-deep h1,
+.fast-track-page__panel ::v-deep h2,
+.fast-track-page__panel ::v-deep h3,
+.fast-track-page__panel ::v-deep h4,
+.fast-track-page__panel ::v-deep h5 {
+  font-family: "Press Start 2P", monospace;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: rgba(244, 211, 94, 0.92);
+}
+
+.fast-track-page__panel ::v-deep h1 {
+  font-size: 1.6rem;
+  text-align: center;
+}
+
+.fast-track-page__panel ::v-deep h2 {
+  font-size: 1rem;
+  text-align: center;
+  color: rgba(156, 246, 255, 0.85);
+}
+
+.fast-track-page__panel ::v-deep label,
+.fast-track-page__panel ::v-deep th {
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+}
+
+.fast-track-page__panel ::v-deep table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.75rem;
+}
+
+.fast-track-page__panel ::v-deep td,
+.fast-track-page__panel ::v-deep th {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.6rem;
+  color: rgba(244, 211, 94, 0.85);
+}
+
+.fast-track-page__panel ::v-deep input,
+.fast-track-page__panel ::v-deep select {
+  width: 100%;
+}
+
+@media (min-width: 1100px) {
+  .fast-track-page__grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 
-  #fast-track-congratulations {
-    grid-area: 1 / 1 / 2 / 2;
-  }
-  #your-buyout {
-    grid-area: 1 / 2 / 2 / 4;
-  }
-  #how-to-win {
-    grid-area: 2 / 1 / 3 / 3;
-  }
-  #explanation-of-100x {
-    grid-area: 2 / 3 / 3 / 4;
+  .fast-track-page__panel--wide {
+    grid-column: span 2;
   }
 }
 
-@media (max-width: 800px) {
-  section#fasttrack-upper {
-    display: block;
+@media (max-width: 768px) {
+  .fast-track-page__section {
+    padding: 1.75rem 1.25rem;
+    border-radius: 18px;
   }
-  #fast-track-congratulations {
-    margin: 20px 0;
-  }
-  #your-buyout {
-    margin: 20px 0;
-  }
-  #how-to-win {
-    margin: 20px 0;
-  }
-  #explanation-of-100x {
-    margin: 20px 0;
+
+  .fast-track-page__panel {
+    padding: 0;
   }
 }
 </style>

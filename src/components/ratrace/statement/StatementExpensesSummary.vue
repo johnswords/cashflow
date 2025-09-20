@@ -21,9 +21,24 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 #expense-summary {
-  justify-content: space-between;
-  grid-area: expense-summary;
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
+
+.total-io {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.total-io label {
+  color: rgba(244, 211, 94, 0.85);
+}
+
+.total-io :deep(input) {
+  width: 100%;
 }
 </style>

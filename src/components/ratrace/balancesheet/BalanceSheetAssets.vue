@@ -47,29 +47,83 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 #assets {
   grid-area: assets;
+  background: rgba(13, 10, 38, 0.92);
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: 18px;
+  padding: 1.5rem;
+}
+
+.column-title-bar {
+  margin: 0 0 1.25rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(156, 246, 255, 0.85);
 }
 
 #asset-list {
   display: flex;
-  flex-wrap: nowrap;
   flex-direction: column;
-  justify-content: flex-start;
+  gap: 0.75rem;
 }
 
 #asset-list > * {
-  /* In relation to its parent */
-  flex: 1 1 auto;
-  margin: 7px;
-  /* in relation to its children */
   display: flex;
-  flex-wrap: nowrap;
-  flex-direction: row;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  background: linear-gradient(135deg, rgba(12, 8, 34, 0.9), rgba(18, 13, 48, 0.9));
+  border: 1px solid rgba(244, 211, 94, 0.22);
+  border-radius: 16px;
+  padding: 0.85rem 1.1rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
 }
+
 #asset-list > * > * {
-  flex: 1 1 auto;
-  white-space: nowrap;
+  flex: 1 1 160px;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  white-space: normal;
+}
+
+#asset-list > * > :first-child {
+  flex: 1 1 220px;
+}
+
+#asset-list > .all-text {
+  justify-content: space-between;
+  text-transform: uppercase;
+  color: rgba(244, 211, 94, 0.88);
+}
+
+#asset-list ::v-deep input[type="text"],
+#asset-list ::v-deep input.numeric {
+  width: 100%;
+}
+
+#asset-list > .all-text > div {
+  flex: 1 1 33%;
+}
+
+@media (max-width: 720px) {
+  #asset-list > * {
+    gap: 0.6rem;
+  }
+
+  #asset-list > * > * {
+    flex: 1 1 100%;
+  }
+
+  #asset-list > * > :first-child {
+    flex-basis: 100%;
+  }
 }
 </style>

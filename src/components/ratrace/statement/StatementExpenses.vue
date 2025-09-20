@@ -1,5 +1,5 @@
 <template>
-  <div class="expenses">
+  <div id="expenses">
     <h3 class="column-title-bar">Expenses</h3>
     <table class="line-inputs">
       <tbody>
@@ -39,8 +39,13 @@ export default {
 };
 </script>
 
-<style lang="scss">
-#expenses {
-  grid-area: expenses;
+<style scoped lang="scss">
+.column-title-bar {
+  margin: 0 0 1rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(156, 246, 255, 0.85);
 }
 </style>

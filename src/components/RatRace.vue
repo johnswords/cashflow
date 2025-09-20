@@ -1,9 +1,18 @@
 <template>
   <div class="rat-race">
-    <rat-race-header />
-    <statement-area />
-    <balance-sheet-cash-flow />
-    <balance-sheet-area />
+    <section class="rat-race__section rat-race__section--meta">
+      <rat-race-header />
+    </section>
+
+    <section class="rat-race__section rat-race__section--statement">
+      <statement-area />
+    </section>
+
+    <section class="rat-race__section rat-race__section--balance">
+      <balance-sheet-cash-flow />
+      <balance-sheet-area />
+    </section>
+
     <modal-window-loader />
   </div>
 </template>
@@ -20,7 +29,7 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 .rat-race {
   position: relative;
   max-width: 1100px;
@@ -29,31 +38,30 @@ export default {
   display: flex;
   flex-direction: column;
   gap: 2rem;
+  color: #f6f3ff;
 }
 
-#income-summary,
-#expense-summary,
-.total-io {
-  font-family: sans-serif;
-}
-
-.total-io {
+.rat-race__section {
+  background: linear-gradient(145deg, rgba(10, 6, 34, 0.92), rgba(4, 1, 14, 0.92));
+  border: 1px solid rgba(156, 39, 176, 0.35);
+  border-radius: 22px;
+  box-shadow: 0 18px 40px rgba(0, 0, 0, 0.35);
+  padding: 2rem 2.25rem;
   display: flex;
-  font-weight: 800;
-  padding: 0 0 30px 30%;
+  flex-direction: column;
+  gap: 1.75rem;
+  overflow: hidden;
+}
 
-  label {
-    flex: 0 0 110px;
-  }
-  sub {
-    display: block;
-    color: #666;
+.rat-race__section--balance {
+  gap: 2.25rem;
+  padding-bottom: 2.5rem;
+}
+
+@media (max-width: 900px) {
+  .rat-race__section {
+    padding: 1.75rem 1.5rem;
+    border-radius: 18px;
   }
 }
-@media (max-width: 800px) {
-  .total-io {
-    padding-left: 10% !important;
-  }
-}
-</style>
 </style>

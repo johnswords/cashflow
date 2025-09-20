@@ -1,5 +1,5 @@
 <template>
-  <div id="fast-track">
+  <div class="fast-track">
     <fast-track-page />
   </div>
 </template>
@@ -12,13 +12,21 @@ export default {
 };
 </script>
 
-<style lang="scss">
-#fast-track {
+<style scoped lang="scss">
+.fast-track {
+  position: relative;
+  max-width: 1040px;
+  margin: 0 auto;
+  padding: 2rem 0 2.5rem;
   display: flex;
-  justify-content: center;
+  flex-direction: column;
+  gap: 2rem;
+  color: #f6f3ff;
 }
 
-#fast-track > * {
-  width: min(100%, 1100px);
+@media (max-width: 768px) {
+  .fast-track {
+    padding: 1.5rem 0 2rem;
+  }
 }
 </style>

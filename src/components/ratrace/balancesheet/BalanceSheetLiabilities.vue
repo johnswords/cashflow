@@ -28,14 +28,58 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 #liabilities {
   grid-area: liabilities;
+  background: rgba(13, 10, 38, 0.92);
+  border: 1px solid rgba(244, 211, 94, 0.2);
+  border-radius: 18px;
+  padding: 1.5rem;
 }
-table#liability-list {
-  border: 0;
+
+.column-title-bar {
+  margin: 0 0 1.25rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.8rem;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: rgba(156, 246, 255, 0.85);
 }
-table#liability-list tbody tr td:first-child {
-  width: 130px;
+
+#liability-list {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0 0.75rem;
+}
+
+#liability-list tbody tr {
+  background: linear-gradient(135deg, rgba(12, 8, 34, 0.9), rgba(18, 13, 48, 0.9));
+  border: 1px solid rgba(244, 211, 94, 0.22);
+  border-radius: 16px;
+  box-shadow: 0 6px 16px rgba(0, 0, 0, 0.25);
+}
+
+#liability-list tbody tr td {
+  padding: 0.75rem 1rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.6rem;
+  letter-spacing: 0.06em;
+}
+
+#liability-list tbody tr td:first-child {
+  min-width: 150px;
+  color: rgba(244, 211, 94, 0.85);
+  text-transform: uppercase;
+  white-space: normal;
+}
+
+#liability-list tbody tr td:last-child {
+  width: 100%;
+}
+
+@media (max-width: 720px) {
+  #liability-list tbody tr td:first-child {
+    width: auto;
+  }
 }
 </style>

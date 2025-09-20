@@ -1,32 +1,45 @@
 <template>
-  <section class="area">
-    <div class="player-chip" v-if="playerName">
-      <span class="player-chip__label">Player</span>
-      <span class="player-chip__value">{{ playerName }}</span>
+  <section class="buyout">
+    <div class="buyout__meta">
+      <div class="player-chip" v-if="playerName">
+        <span class="player-chip__label">Player</span>
+        <span class="player-chip__value">{{ playerName }}</span>
+      </div>
+      <div class="buyout__auditor">
+        <title-input :value="auditor" @input="changeAuditor($event)" :tabindex="3">Auditor</title-input>
+        <span class="buyout__auditor-hint">Person on your right</span>
+      </div>
     </div>
-    <div id="auditor-area">
-      <title-input :value="auditor" @input="changeAuditor($event)" :tabindex="3">Auditor</title-input>
-      <sub>Person on your right</sub>
+
+    <div class="buyout__card">
+      <h3 class="buyout__title">Your Buyout</h3>
+      <div class="buyout__rows">
+        <div class="buyout__row">
+          <div class="buyout__label">
+            Your Passive Income (from other side)
+            <small>(Rounded to nearest thousand dollars)</small>
+          </div>
+          <div class="buyout__value">
+            <span class="buyout__symbol">=</span>
+            <dollar-format-input :value="beginningCashFlowDayIncome / 100" readonly />
+          </div>
+        </div>
+        <div class="buyout__row">
+          <div class="buyout__label">Buyout Multiple</div>
+          <div class="buyout__value">
+            <span class="buyout__symbol">×</span>
+            <span class="buyout__constant">100</span>
+          </div>
+        </div>
+        <div class="buyout__row">
+          <div class="buyout__label">Your Beginning CASHFLOW Day Income</div>
+          <div class="buyout__value">
+            <span class="buyout__symbol">=</span>
+            <dollar-format-input :value="beginningCashFlowDayIncome" readonly />
+          </div>
+        </div>
+      </div>
     </div>
-    <section class="title-box">
-      <h3>Your Buyout</h3>
-      <table>
-        <tr>
-          <td>Your Passive Income (from other side) <sub>(Rounded to Nearest Thousand Dollars)</sub></td>
-          <td>=</td>
-          <td><dollar-format-input :value="beginningCashFlowDayIncome / 100" readonly /></td>
-        </tr>
-        <tr>
-          <td>Buyout Multiple</td>
-          <td colspan="2" class="numeric">X 100</td>
-        </tr>
-        <tr>
-          <td>Your Beginning CASHFLOW Day Income</td>
-          <td>=</td>
-          <td><dollar-format-input :value="beginningCashFlowDayIncome" readonly /></td>
-        </tr>
-      </table>
-    </section>
   </section>
 </template>
 
@@ -52,11 +65,18 @@ export default {
 </script>
 
 <style scoped lang="scss">
-.area {
+.buyout {
   display: flex;
   flex-direction: column;
-  align-content: space-between;
-  gap: 2.5rem;
+  gap: 1.75rem;
+}
+
+.buyout__meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1.25rem;
+  align-items: center;
+  justify-content: space-between;
 }
 
 .player-chip {
@@ -68,51 +88,110 @@ export default {
 }
 
 .player-chip__label {
-  font-size: 0.7rem;
+  font-size: 0.68rem;
   text-transform: uppercase;
   color: rgba(156, 246, 255, 0.85);
 }
 
 .player-chip__value {
-  padding: 0.35rem 0.75rem;
+  padding: 0.35rem 0.85rem;
   border-radius: 999px;
   border: 2px solid rgba(156, 39, 176, 0.4);
   background: rgba(13, 10, 34, 0.85);
+  color: rgba(244, 211, 94, 0.9);
 }
 
-#auditor-area {
+.buyout__auditor {
   display: flex;
   flex-direction: column;
   gap: 0.35rem;
+  min-width: 260px;
 }
-</style>
 
-<style lang="scss">
-.title-box {
-  border: 1px solid black;
+.buyout__auditor-hint {
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.55rem;
+  color: rgba(255, 255, 255, 0.55);
+}
 
-  h3 {
-    margin: 0;
-    font-size: 1.7rem;
-    background: #000;
-    color: #fff;
-    text-align: center;
-    font-style: italic;
-    padding: 4px;
-  }
-  table {
-    font-family: sans-serif;
-    padding: 4px 4px 0;
-    width: 100%;
+.buyout__card {
+  background: linear-gradient(135deg, rgba(12, 8, 34, 0.88), rgba(27, 16, 52, 0.9));
+  border: 1px solid rgba(244, 211, 94, 0.25);
+  border-radius: 18px;
+  padding: 1.75rem;
+  box-shadow: 0 12px 28px rgba(0, 0, 0, 0.28);
+  display: flex;
+  flex-direction: column;
+  gap: 1.5rem;
+}
 
-    td {
-      font-weight: bold;
-      padding-bottom: 10px;
-    }
-  }
-  sub {
-    font-weight: lighter;
-    display: block;
+.buyout__title {
+  margin: 0;
+  font-family: "Press Start 2P", monospace;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  text-align: center;
+  color: rgba(244, 211, 94, 0.95);
+  font-size: 1rem;
+}
+
+.buyout__rows {
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
+}
+
+.buyout__row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 1rem;
+  justify-content: space-between;
+  align-items: flex-start;
+}
+
+.buyout__label {
+  flex: 1 1 260px;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.62rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: rgba(156, 246, 255, 0.9);
+  line-height: 1.5;
+}
+
+.buyout__label small {
+  display: block;
+  margin-top: 0.35rem;
+  font-size: 0.5rem;
+  letter-spacing: 0.04em;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: none;
+}
+
+.buyout__value {
+  flex: 0 1 220px;
+  display: flex;
+  align-items: center;
+  gap: 0.65rem;
+  font-family: "Press Start 2P", monospace;
+  color: rgba(244, 211, 94, 0.9);
+}
+
+.buyout__symbol {
+  font-size: 0.8rem;
+}
+
+.buyout__constant {
+  font-size: 0.8rem;
+}
+
+.buyout__value :deep(input) {
+  width: 100%;
+}
+
+@media (max-width: 640px) {
+  .buyout__value {
+    flex: 1 1 100%;
   }
 }
 </style>

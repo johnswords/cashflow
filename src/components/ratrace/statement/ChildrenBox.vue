@@ -40,32 +40,41 @@ export default {
 };
 </script>
 
-<style lang="scss">
+<style scoped lang="scss">
 #children-box {
-  background-color: #ccc;
-  border: 1px solid black;
-  margin: 40px 24px 24px;
-  min-width: 200px;
-  width: 65%;
-  max-width: 560px;
-  padding: 16px;
-  white-space: nowrap;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+  gap: 1rem;
+  background: rgba(20, 14, 52, 0.9);
+  border: 1px solid rgba(244, 211, 94, 0.25);
+  border-radius: 16px;
+  padding: 1.25rem 1.5rem;
 }
-#children-box input {
-  background-color: #ccc;
-  border-left-color: #aaa;
-}
-#children-box label {
-  font-weight: bold;
-  width: 150px;
-}
+
 .children-input {
   display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.6rem;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: rgba(156, 246, 255, 0.85);
 }
-.children-input ~ .children-input {
-  margin-top: 15px;
+
+.children-input label {
+  line-height: 1.3;
 }
+
 #children-box sub {
-  display: block;
+  grid-column: 1 / -1;
+  color: rgba(255, 255, 255, 0.55);
+  font-family: "Press Start 2P", monospace;
+  font-size: 0.55rem;
+  text-transform: none;
+}
+
+#children-box :deep(input) {
+  width: 100%;
 }
 </style>

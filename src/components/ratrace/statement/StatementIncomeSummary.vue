@@ -35,29 +35,66 @@ export default {
 };
 </script>
 
-<style lang="scss">
-#auditor-area sub {
-  display: block;
-  text-align: center;
-}
-
+<style scoped lang="scss">
 #income-summary {
-  justify-content: space-between;
-  grid-area: income-summary;
+  display: flex;
+  flex-direction: column;
+  gap: 1.25rem;
 }
 
-#passive-income-area .passive-income-area {
-  /* the #area is the upper section, the .area is two horizontal neighbors */
+#auditor-area {
   display: flex;
-  flex-direction: row;
-  flex: 1 1 100px;
-  align-content: stretch;
+  flex-direction: column;
+  gap: 0.4rem;
 }
-#passive-income-area .passive-income-area label {
-  flex: 0 0 132px;
-  white-space: nowrap;
+
+#auditor-area sub {
+  text-align: left;
+  font-size: 0.6rem;
+  opacity: 0.6;
+  font-family: "Press Start 2P", monospace;
+  text-transform: none;
 }
-#passive-income-area .passive-income-area input {
-  flex: 1 1 auto;
+
+#passive-income-area {
+  display: flex;
+  flex-direction: column;
+  gap: 0.5rem;
+}
+
+.passive-income-area {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.passive-income-area label {
+  flex: 0 0 auto;
+  color: rgba(156, 246, 255, 0.85);
+}
+
+.passive-income-area :deep(input) {
+  width: 100%;
+}
+
+.total-io {
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+}
+
+.total-io label {
+  color: rgba(244, 211, 94, 0.85);
+}
+
+.total-io :deep(input) {
+  width: 100%;
+}
+
+.total-io sub {
+  display: block;
+  color: rgba(255, 255, 255, 0.5);
+  font-size: 0.55rem;
+  text-transform: none;
 }
 </style>
