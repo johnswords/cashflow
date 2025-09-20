@@ -1,164 +1,130 @@
-# CashFlow Balance Sheet - Multiplayer Edition
+# Cashflow Balance Sheet – Multiplayer Arcade
 
-A persistent, multi-player digital game sheet for Rich Dad's CashFlow board game with retro Nintendo-style presentation. Track income, expenses, assets, and liabilities across multiple games with automatic calculations and audit history.
-
-Originally forked from https://nathanstrutz.github.io/cashflow-balance-sheet/ - now evolved into a full multiplayer experience backed by SQLite.
+A retro-inspired control room for Rich Dad's Cashflow board game. Spin up Nintendo-style game sessions, manage 2–6 players, capture every sheet adjustment with an audit trail, and crown winners with persistent leaderboards. The single-player calculator is still here—but now it lives inside a full multiplayer flow backed by SQLite.
 
 ---
 
-## 🎮 Features
+## ✨ What’s Shipped Now
+- **Retro Load Screen & Navigation** – animated New Game / List Games / Leaderboard menu with keyboard support.
+- **Game Lifecycle** – create, resume, and complete games with unique IDs, player colors, and persistent state.
+- **Per-Player Sheets** – reuse the original Rat Race & Fast Track layouts with save/cancel controls and confirmation diffs.
+- **Audit Trail** – automatic logging of every change, inline diff preview, correction tagging, and rewind-to-edit workflow.
+- **Recent Change Feed** – each player card surfaces the three latest updates with friendly field labels.
+- **Winner Flow** – end-game modal captures winner/comment plus a final stats snapshot and writes to the leaderboard.
+- **SNES/GameCube Audio** – quick chimes on save and a short victory fanfare, with a global mute toggle.
+- **SQLite Persistence** – Koa + better-sqlite3 backend manages games, players, audits, and leaderboard snapshots.
 
-### Current (v0.5)
-- **Single & Multiplayer Modes**: Original single-player sheet plus new persistent multiplayer support
-- **Game Management**: Create games with 2-6 players, each with unique color assignments
-- **Persistent Storage**: SQLite backend preserves all game states with full audit trail
-- **Real-time Calculations**: Automatic computation of passive income, cash flow, and ROI
-- **Two Game Modes**: Full support for both "Rat Race" and "Fast Track" phases
-- **Backend API**: Koa-based REST service managing games, players, and leaderboards
-- **Vuex State Management**: Centralized state with backend synchronization
-
-### In Development
-- **Retro Load Screen**: Nintendo-style menu with game selection and leaderboard
-- **Game Dashboard**: View all players' financial summaries at a glance
-- **Audit Trail**: Complete history of every change with correction tagging
-- **Winner Flow**: End game ceremony with leaderboard integration
-- **Sound Effects**: SNES/GameCube-era save confirmations and victory fanfare
-
-### Planned
-- **Leaderboard**: Top performers ranked by final cash flow
-- **Timer Tracking**: Game and turn duration metrics
-- **Enhanced Animations**: Screen transitions and celebratory effects
+## 🚧 In Progress / Up Next
+- **Leaderboard polish** – richer layout, filters, and navigation back to completed games.
+- **Responsive 1080p view** – shared-screen spacing and typography tuning.
+- **Timers** – game duration plus per-turn timers for future analytics.
+- **Animations & FX** – transitions, CRT overlays, and more in-game flair.
 
 ---
 
-## 🚀 Getting Started
+## 🧰 Prerequisites
+- Node.js 18+
+- npm 10+
+- SQLite (included via `better-sqlite3`, no separate install required)
 
-### Prerequisites
-- Node.js 16+ and npm
-- SQLite3
+---
 
-### Installation
+## ⚙️ Local Development
 
 ```bash
-# Clone the repository
-git clone https://github.com/johnswords/cashflow.git
-cd cashflow
-
 # Install dependencies
 npm install
 
-# Set up the database
-npm run db:setup
+# Run database migrations (creates ./data/cashflow.sqlite)
+npm run backend:migrate
 
-# Start the backend server (port 3001)
-npm run backend
+# Start the backend API on http://localhost:4000
+npm run backend:dev
 
-# In another terminal, start the Vue dev server (port 8080)
+# In a second terminal, start the Vue dev server on http://localhost:8080
 npm run serve
 ```
 
-Visit http://localhost:8080 to play!
+The Vue dev server proxies `/api/*` requests to the backend (see `vue.config.js`). Game data lives in the `data/` directory, which is gitignored.
 
-### Single Player Mode
-The original single-player experience remains fully functional at the root path with localStorage persistence.
-
-### Multiplayer Mode (Beta)
-Access multiplayer features through the API-driven game management system. Currently requires direct API interaction while the UI is being completed.
+### Useful Commands
+| Command | Description |
+| --- | --- |
+| `npm run backend:migrate` | Apply pending SQLite migrations |
+| `npm run backend:dev` | Run Koa API server with nodemon |
+| `npm run backend:seed` | Placeholder for future seed data |
+| `npm run serve` | Vue dev server with hot reload |
+| `npm run build` | Production build (frontend only) |
 
 ---
 
-## 🏗️ Architecture
+## 🏛️ Architecture
 
 ### Frontend (Vue 2 + Vuex)
-- **Components**: Modular input components with automatic Vuex binding
-- **State Modules**: Separated concerns for income, expenses, assets, liabilities, investments
-- **Persistence**: Dual-mode with localStorage (single-player) and API sync (multiplayer)
+- `src/App.vue` swaps between retro views (`LoadScreen`, `NewGameSetup`, `GameList`, `GameScreen`, `PlayerSheetView`, `LeaderboardView`).
+- Vuex (`src/store.js`) owns the multiplayer state machine, audit pagination, modals, and sheet normalization helpers.
+- Domain stores in `src/stores/` keep the original financial module structure (income, expenses, etc.).
+- API client lives in `src/api/client.js` and communicates with the backend REST endpoints.
 
-### Backend (Koa + SQLite)
-- **REST API**: Full CRUD for games, players, audit logs, and leaderboards
-- **Database**: SQLite with Kysely query builder and migration support
-- **Transactions**: ACID-compliant multi-entity updates
+### Backend (Koa + Kysely + better-sqlite3)
+- Entry point: `src/backend/server.js`.
+- Routes: `games`, `leaderboard`, `health` under `/api/*`.
+- Migrations: `src/backend/db/migrations` (run via `npm run backend:migrate`).
+- Data directory: `data/cashflow.sqlite` (auto-created, WAL mode enabled).
 
-### Data Model
-```
-Games → Players → Sheet States (JSON)
-     ↘ Audit Log Entries
-     ↘ Leaderboard Records
-```
-
----
-
-## 🎯 Roadmap Progress
-
-- ✅ SQLite schema and migrations
-- ✅ Backend API service
-- ✅ Vuex multiplayer state management
-- ⏳ Retro-themed UI screens (50% complete)
-- ⏳ Audit trail interface
-- ⏳ Leaderboard view
-- ⏳ Sound effects and animations
-- 📋 Keyboard/controller navigation
-- 📋 1080p shared-screen optimizations
+### Key Tables
+| Table | Purpose |
+| --- | --- |
+| `games` | Game metadata, status, timestamps, winner info |
+| `players` | Per-player sheet state (JSON blob), color, name |
+| `audit_log_entries` | Change history with before/after snapshots |
+| `leaderboard_records` | Final cashflow snapshots for completed games |
 
 ---
 
-## 💻 Development
-
-### Commands
-
-```bash
-npm run serve       # Vue dev server with hot reload
-npm run backend     # Koa API server
-npm run build       # Production build
-npm run db:migrate  # Run database migrations
-npm run db:seed     # Load sample data (coming soon)
-```
-
-### Project Structure
-
+## 📂 Project Layout
 ```
 src/
-├── api/           # API client for backend communication
-├── backend/       # Koa server, routes, and DB queries
-├── components/    # Vue components (inputs, sheets, modals)
-├── stores/        # Vuex modules and plugins
-├── utils/         # Shared utilities and helpers
-└── App.vue        # Root component with routing logic
+├── api/            # Frontend REST client
+├── backend/        # Koa server, migrations, routes
+├── components/
+│   ├── app/        # Load screen, dashboards, modals, toggles
+│   ├── misc/ …     # Reusable inputs
+│   └── ratrace/…   # Original sheet components
+├── stores/         # Vuex modules + plugins
+├── utils/          # Helpers (diffing, audio, cashflow math)
+├── App.vue         # Retro view router
+└── main.js         # Bootstraps Vue app
 ```
 
-### Contributing
+---
 
-This is a personal project for family game nights, but suggestions and bug reports are welcome! Please open an issue to discuss any proposed changes.
+## 🧪 Testing
+Automated tests are still TODO. For now:
+- Run `npm run backend:migrate` before manual testing to ensure schema sync.
+- Exercise the main flows:
+  1. Create a new game (2–6 players) and verify unique colors enforced.
+  2. Adjust a player sheet, confirm diff modal + audit log entry.
+  3. Trigger a correction from the audit modal and confirm it logs with `entryType = correction`.
+  4. Finish a game, confirm leaderboard refresh + fanfare.
+
+Document manual results in PRs until Jest/Vue Test Utils are in place.
 
 ---
 
-## 🚢 Deployment
-
-### GitHub Pages (Static Single-Player Only)
-
-```bash
-git checkout gh-pages
-git merge main
-# Edit vue.config.js: add publicPath: "/cashflow/"
-npm run build
-git add dist/*
-git commit -m "Deploy to GitHub Pages"
-git subtree push --prefix dist origin gh-pages
-```
-
-### Full Stack Deployment
-Multiplayer mode requires a Node.js host with SQLite support. Deployment guides for popular platforms coming soon.
+## 🚀 Deployment Notes
+- **Frontend-only (legacy)**: You can still deploy the static build, but multiplayer features require the backend.
+- **Full stack**: Host the Node backend (4000) and serve the Vue build behind the same domain or a reverse proxy. Ensure the `data/` directory is writable.
+- Containerization scripts are on the roadmap once the schema stabilizes.
 
 ---
 
-## 📝 License
-
-MIT License - Feel free to use this for your own CashFlow game sessions!
+## 🤝 Contributing
+This project powers family & friends game nights—bug reports and ideas welcome. Open an issue with steps to reproduce or a proposal before sending large PRs. Follow the coding style and commit guidance in `AGENTS.md`.
 
 ---
 
-## 🙏 Acknowledgments
-
-- Original single-player implementation by [Nathan Strutz](https://github.com/nathanstrutz/cashflow-balance-sheet)
-- CashFlow board game by Robert Kiyosaki
-- Built for Henry and friends to make game night calculations effortless
+## 🙏 Credits
+- Original single-player sheet by [Nathan Strutz](https://github.com/nathanstrutz/cashflow-balance-sheet)
+- Cashflow is a registered trademark of Robert Kiyosaki & The Rich Dad Company
+- Multiplayer arcade edition crafted for Henry, Ashley, and the Cashflow crew

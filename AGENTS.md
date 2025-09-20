@@ -1,22 +1,69 @@
-# Repository Guidelines
+# Engineering Playbook
 
-## Project Structure & Module Organization
-Application code lives in `src`, with `main.js` bootstrapping Vue 2 and `App.vue` composing the layout shell. Feature views and shared atoms sit under `src/components`, organized by domain folders such as `fasttrack/` and `ratrace/`. Global state is centralized in `src/store.js`, which wires the modular files under `src/stores/` and the plugin helpers in `src/stores/plugins/`. Static assets and brand imagery belong in `public/` for root-served files or `src/images/` for webpack-managed imports.
+## Project Overview
+- Vue 2 application (`src/main.js`, `src/App.vue`) renders retro-inspired flows for Cashflow game management.
+- Vuex (`src/store.js`) orchestrates multiplayer state: view routing, sheet normalization, audit logging, modals, audio prefs.
+- Backend lives in `src/backend/` (Koa + better-sqlite3 via Kysely) and exposes `/api/*` routes for games, players, audits, leaderboard.
+- SQLite database stored at `data/cashflow.sqlite` (gitignored, WAL mode). Use migration scripts to evolve schema.
 
-## Build, Test, and Development Commands
-- `npm install` — install Vue CLI 4 dependencies before first run.
-- `npm run serve` — launch the local dev server with hot module reload; default port 8080.
-- `npm run build` — produce the minified production bundle in `dist/`.
-Run commands from the repository root. Prefer Node 18 LTS for CLI parity.
+## Development Workflow
+| Task | Command |
+| --- | --- |
+| Install deps | `npm install` |
+| Run migrations | `npm run backend:migrate` |
+| Start API (4000) | `npm run backend:dev` |
+| Start frontend (8080) | `npm run serve` |
+| Production build | `npm run build` |
+| Seed data | `npm run backend:seed` (stub – extend when needed) |
 
-## Coding Style & Naming Conventions
-Use Vue single-file components with the `<script>`, `<template>`, `<style lang="scss">` order. Keep indentation at two spaces and favor descriptive PascalCase for component files (`FastTrack.vue`) and camelCase for stores (`fasttrack.js`). Prettier is configured with `printWidth: 140`; run your editor integration or `npx prettier --write "src/**/*.{js,vue,scss}"` before committing. SCSS variables and palettes belong in `src/palette.scss`; import shared styles rather than redefining constants.
+Always keep backend + frontend running together for multiplayer flows. Proxy is configured in `vue.config.js`.
 
-## Testing Guidelines
-Automated tests are not yet configured. When introducing coverage, add Vue Test Utils + Jest via `@vue/cli-plugin-unit-jest`, place specs in `tests/unit/`, and mirror the component filename pattern (`FastTrack.spec.js`). Until the suite exists, document manual verification steps in pull requests, especially for financial calculations and responsive layout modes.
+## Coding Standards
+- Use Vue SFC order `<template>`, `<script>`, `<style lang="scss">`. Two-space indent.
+- Prefer composable helpers in `src/utils/` (diffing, cashflow math, audio).
+- Vuex mutations/actions should stay pure and commit-friendly—avoid direct async inside mutations.
+- Normalize sheet state before saving (see `buildSheetState`/`applySheetStateToModules`).
+- Audio helpers should route through `playSound`/`setAudioEnabled` to respect user preferences.
 
-## Commit & Pull Request Guidelines
-Existing history favors short, imperative commit subjects (e.g., `Fix mobile table layout`). Follow that style and group related changes together. Pull requests should include: a concise summary, linked Linear/GitHub issue (if available), screenshots or screen recordings for UI updates, and explicit test notes (`Tested: npm run serve on macOS Sonoma, Chrome 128`). Request review once linting, builds, and manual checks pass.
+## Backend Guidelines
+- Add migrations in `src/backend/db/migrations` (timestamp-named JS files using Kysely schema builder).
+- Wrap multi-entity writes in transactions (`db.transaction().execute`).
+- Keep route modules small: input validation with Zod (`src/backend/validators`), serialization helpers for DB rows.
+- Return ISO timestamps; frontend expects `createdAt`, `updatedAt`, etc.
 
-## State & Data Flow Notes
-Vuex modules in `src/stores/` encapsulate domain data (income, assets, liabilities). Use the existing plugin pattern for persistence—extend `src/stores/plugins/localstorage.js` rather than introducing ad hoc storage logic. Derivations that feed Fast Track dashboards should stay in getters to keep components presentation-focused.
+## UI / UX Notes
+- Retro aesthetic: `Press Start 2P` font, neon gradients, 80s palette.
+- Audio toggle (`AudioToggle.vue`) should be visible on major screens.
+- Confirmation modals must surface diff summaries before committing changes.
+- Audit modal (`AuditLogModal.vue`) is the single source of truth for history; corrections bounce users into sheet editor with prefilled state.
+- End game modal captures winner + comment and shows summary stats before committing.
+
+## Testing & QA
+- Automated tests pending; document manual verification in PR descriptions.
+- Before submitting PRs: run `npm run backend:migrate` (ensures schema), then `npm run build` (catches compilation issues despite Sass deprecation warnings).
+- Check audit log after major flows (create → save → correction → end game) to ensure IDs/timestamps look sane.
+
+## Git & PR Hygiene
+- Use imperative commit messages (`feat: add audit modal`).
+- Group backend/ frontend changes logically; avoid large mixed commits if possible.
+- Include screenshots/GIFs for UI updates (retro theme changes matter); list manual test cases executed.
+
+## State & Data Flow Reference
+```
+Vuex root state
+├─ currentView (load-screen, new-game-setup, game-list, game-screen, player-sheet, leaderboard)
+├─ games[]           # fetched summaries
+├─ activeGame        # detailed game with players[]
+├─ activePlayerId    # selected player for sheet view
+├─ auditEntries[]    # paginated history for current game
+├─ leaderboard[]
+├─ endGameForm       # winner/comment draft
+├─ ui                # modal visibility flags
+└─ preferences.audioEnabled
+```
+Persisted sheet structure mirrors legacy modules (income/expenses/etc.) and is stored as JSON blobs per player.
+
+## Outstanding Work (See `TODO.md` for granular list)
+- Leaderboard polish, timers, responsive scaling, richer audit diff labels for nested assets.
+
+Stay consistent, keep the retro vibe alive, and document gameplay impact as we ship new features.
