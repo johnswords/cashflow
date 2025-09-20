@@ -102,6 +102,7 @@ export default {
   justify-content: space-between;
   text-transform: uppercase;
   color: rgba(244, 211, 94, 0.88);
+  align-items: center;
 }
 
 #asset-list ::v-deep input[type="text"],
@@ -110,7 +111,8 @@ export default {
 }
 
 #asset-list > .all-text > div {
-  flex: 1 1 33%;
+  flex: 1 1 180px;
+  white-space: nowrap;
 }
 
 @media (max-width: 720px) {

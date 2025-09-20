@@ -50,6 +50,7 @@ export default {
   width: 100%;
   border-collapse: separate;
   border-spacing: 0 0.75rem;
+  table-layout: fixed;
 }
 
 #liability-list tbody tr {
@@ -64,17 +65,19 @@ export default {
   font-family: "Press Start 2P", monospace;
   font-size: 0.6rem;
   letter-spacing: 0.06em;
+  vertical-align: middle;
 }
 
 #liability-list tbody tr td:first-child {
+  width: 32%;
   min-width: 150px;
-  color: rgba(244, 211, 94, 0.85);
+  color: rgba(156, 246, 255, 0.9);
   text-transform: uppercase;
   white-space: normal;
 }
 
 #liability-list tbody tr td:last-child {
-  width: 100%;
+  width: 68%;
 }
 
 @media (max-width: 720px) {

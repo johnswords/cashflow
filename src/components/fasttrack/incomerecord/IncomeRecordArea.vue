@@ -126,6 +126,10 @@ export default {
   color: rgba(156, 246, 255, 0.85);
 }
 
+.income-record__baseline span {
+  white-space: nowrap;
+}
+
 .income-record__baseline :deep(input) {
   width: 180px;
 }
@@ -159,6 +163,7 @@ export default {
   font-size: 0.58rem;
   letter-spacing: 0.04em;
   color: rgba(253, 249, 255, 0.9);
+  vertical-align: middle;
 }
 
 .income-record__table td:first-child {
