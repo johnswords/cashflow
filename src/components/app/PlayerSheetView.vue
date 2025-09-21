@@ -51,30 +51,38 @@
           <h3>Confirm Changes</h3>
           <p v-if="!pendingDiff.changes.length">No changes detected.</p>
           <ul v-else class="confirm-modal__diff-list">
-            <li v-for="change in pendingDiff.changes" :key="change.path">
+            <li v-for="change in formattedDiff" :key="change.path">
               <span class="diff-path">{{ change.path }}</span>
-              <span class="diff-before">{{ formatValue(change.before) }}</span>
+              <div class="diff-value diff-before" :class="change.beforeDisplay.type">
+                <pre v-if="change.beforeDisplay.type === 'structured'">{{ change.beforeDisplay.text }}</pre>
+                <span v-else>{{ change.beforeDisplay.text }}</span>
+              </div>
               <span class="diff-arrow">→</span>
-              <span class="diff-after">{{ formatValue(change.after) }}</span>
+              <div class="diff-value diff-after" :class="change.afterDisplay.type">
+                <pre v-if="change.afterDisplay.type === 'structured'">{{ change.afterDisplay.text }}</pre>
+                <span v-else>{{ change.afterDisplay.text }}</span>
+              </div>
             </li>
           </ul>
-          <label
-            v-if="pendingDiff.changes.length"
-            class="correction-toggle"
-            :class="{ locked: pendingAuditContext?.type === 'correction' }"
-          >
-            <input
-              type="checkbox"
-              :checked="isCorrection"
-              @change="toggleCorrection"
-              :disabled="pendingAuditContext?.type === 'correction'"
-            />
-            <span>Log this as a correction</span>
-          </label>
-          <footer class="confirm-modal__actions">
-            <button class="ghost" @click="cancelConfirm" :disabled="isSaving">Cancel</button>
-            <button @click="confirmSave" :disabled="isSaving">Confirm Save</button>
-          </footer>
+          <div class="confirm-modal__footer">
+            <label
+              v-if="pendingDiff.changes.length"
+              class="correction-toggle"
+              :class="{ locked: pendingAuditContext?.type === 'correction' }"
+            >
+              <input
+                type="checkbox"
+                :checked="isCorrection"
+                @change="toggleCorrection"
+                :disabled="pendingAuditContext?.type === 'correction'"
+              />
+              <span>Log this as a correction</span>
+            </label>
+            <div class="confirm-modal__actions">
+              <button class="ghost" @click="cancelConfirm" :disabled="isSaving">Cancel</button>
+              <button @click="confirmSave" :disabled="isSaving">Confirm Save</button>
+            </div>
+          </div>
         </div>
       </div>
     </transition>
@@ -121,6 +129,13 @@ export default {
     summary() {
       if (!this.player) return null;
       return computeSummary(this.currentSheetState);
+    },
+    formattedDiff() {
+      return this.pendingDiff.changes.map(change => ({
+        ...change,
+        beforeDisplay: this.describeValue(change.before),
+        afterDisplay: this.describeValue(change.after)
+      }));
     },
     isCorrection() {
       if (this.pendingAuditContext?.type === "correction") return true;
@@ -169,16 +184,41 @@ export default {
       this.showConfirmModal = false;
       this.pendingDiff = { changes: [], fieldPaths: [], beforeSnapshot: {}, afterSnapshot: {} };
     },
-    formatValue(value) {
-      if (value === null || value === undefined) return "—";
+    describeValue(value) {
+      if (value === null || value === undefined || value === "") {
+        return { type: "empty", text: "—" };
+      }
+
+      if (Array.isArray(value)) {
+        if (!value.length) {
+          return { type: "empty", text: "[]" };
+        }
+        return { type: "structured", text: JSON.stringify(value, null, 2) };
+      }
+
       if (typeof value === "object") {
+        const keys = Object.keys(value || {});
+        if (!keys.length) {
+          return { type: "empty", text: "{}" };
+        }
         try {
-          return JSON.stringify(value);
+          return { type: "structured", text: JSON.stringify(value, null, 2) };
         } catch (error) {
-          return String(value);
+          return { type: "text", text: String(value) };
         }
       }
-      return String(value);
+
+      if (typeof value === "number") {
+        if (Number.isFinite(value)) {
+          return {
+            type: "number",
+            text: new Intl.NumberFormat("en-US", { maximumFractionDigits: 2 }).format(value)
+          };
+        }
+        return { type: "text", text: String(value) };
+      }
+
+      return { type: "text", text: String(value) };
     },
     async confirmSave() {
       const audit = {
@@ -478,15 +518,54 @@ export default {
 
 .confirm-modal__diff-list li {
   display: grid;
-  grid-template-columns: 2fr 2fr auto 2fr;
-  gap: 0.5rem;
-  align-items: center;
+  grid-template-columns: minmax(0, 1.25fr) minmax(0, 1.6fr) auto minmax(0, 1.6fr);
+  gap: 0.75rem;
+  align-items: flex-start;
 }
 
 .diff-path {
   text-transform: uppercase;
   letter-spacing: 0.08em;
   color: #9cf6ff;
+  align-self: flex-start;
+}
+
+.diff-arrow {
+  text-align: center;
+  opacity: 0.6;
+  line-height: 1.5;
+}
+
+.diff-value {
+  width: 100%;
+  font-family: "Source Code Pro", "Fira Code", monospace;
+  font-size: 0.65rem;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  word-break: break-word;
+}
+
+.diff-value span,
+.diff-value pre {
+  display: block;
+}
+
+.diff-value span {
+  padding: 0.45rem 0.6rem;
+  background: rgba(12, 8, 32, 0.6);
+  border: 1px solid rgba(156, 39, 176, 0.25);
+  border-radius: 10px;
+}
+
+.diff-value pre {
+  margin: 0;
+  padding: 0.6rem 0.75rem;
+  background: rgba(12, 8, 32, 0.8);
+  border: 1px solid rgba(156, 39, 176, 0.35);
+  border-radius: 10px;
+  white-space: pre-wrap;
+  max-height: 160px;
+  overflow-y: auto;
 }
 
 .diff-before {
@@ -494,12 +573,12 @@ export default {
 }
 
 .diff-after {
-  color: rgba(156, 255, 148, 0.9);
+  color: rgba(156, 255, 148, 0.95);
 }
 
-.diff-arrow {
-  text-align: center;
-  opacity: 0.6;
+.diff-value.empty {
+  color: rgba(255, 255, 255, 0.6);
+  font-style: italic;
 }
 
 .confirm-modal__actions {
@@ -508,8 +587,15 @@ export default {
   gap: 1rem;
 }
 
-.confirm-modal__actions .correction-toggle {
-  margin-right: auto;
+.confirm-modal__footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+
+.correction-toggle {
   display: flex;
   align-items: center;
   gap: 0.5rem;
@@ -517,11 +603,11 @@ export default {
   font-size: 0.7rem;
 }
 
-.confirm-modal__actions .correction-toggle input {
+.correction-toggle input {
   transform: scale(1.2);
 }
 
-.confirm-modal__actions .correction-toggle.locked {
+.correction-toggle.locked {
   opacity: 0.65;
 }
 
@@ -564,4 +650,4 @@ export default {
 .player-sheet__content ::v-deep table {
   border-color: rgba(244, 211, 94, 0.25) !important;
 }
-</style></style>
+</style>
