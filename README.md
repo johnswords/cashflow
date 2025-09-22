@@ -124,7 +124,8 @@ This project powers family & friends game nights—bug reports and ideas welcome
 
 ---
 
-## 🙏 Credits
-- Original single-player sheet by [Nathan Strutz](https://github.com/nathanstrutz/cashflow-balance-sheet)
-- Cashflow is a registered trademark of Robert Kiyosaki & The Rich Dad Company
-- Multiplayer arcade edition crafted for Henry, Ashley, and the Cashflow crew
+## 🙏 Credits & Legal
+- **Original Creator**: Forked from [Nathan Strutz's Cashflow Balance Sheet](https://github.com/nathanstrutz/cashflow-balance-sheet) - the excellent single-player foundation this multiplayer edition builds upon
+- **Trademark Notice**: CASHFLOW® is a registered trademark of The Rich Dad Company. This project is an unofficial, fan-made digital tool and is not affiliated with, endorsed by, or sponsored by Robert Kiyosaki or The Rich Dad Company
+- **Disclaimer**: This is an independent open-source project created for personal use. All game mechanics and concepts belong to their respective trademark holders
+- **Multiplayer Edition**: Enhanced for Henry, Ashley, and the Cashflow crew
