@@ -35,8 +35,16 @@ app.use(async (ctx, next) => {
         ...(config.nodeEnv === 'development' && { stack: err.stack })
       };
     } else {
-      // Production: log internally, return generic message
-      console.error(`Error ${ctx.status} at ${ctx.path}:`, err.message);
+      // Production: log internally with context, return generic message
+      console.error('Request error:', {
+        status: ctx.status,
+        method: ctx.method,
+        path: ctx.path,
+        origin: ctx.headers.origin || 'no-origin',
+        userAgent: ctx.headers['user-agent'],
+        ip: ctx.ip,
+        error: err.message
+      });
       ctx.body = {
         error: ctx.status === 500 ? 'Internal Server Error' : err.message,
         status: ctx.status

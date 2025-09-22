@@ -8,7 +8,8 @@ const config = require('../config');
 function createCorsMiddleware() {
   const allowedOrigins = new Set(config.cors.allowedOrigins);
 
-  return cors({
+  // Add middleware to set Vary header for proper CDN caching
+  const corsMiddleware = cors({
     origin: (ctx) => {
       const requestOrigin = ctx.headers.origin;
 
@@ -45,6 +46,13 @@ function createCorsMiddleware() {
     // Expose headers to the client
     exposeHeaders: ['X-RateLimit-Remaining', 'X-RateLimit-Reset', 'X-RateLimit-Total']
   });
+
+  // Return a composed middleware that sets Vary header
+  return async (ctx, next) => {
+    // Set Vary: Origin header for proper CDN caching
+    ctx.vary('Origin');
+    await corsMiddleware(ctx, next);
+  };
 }
 
 module.exports = createCorsMiddleware;
