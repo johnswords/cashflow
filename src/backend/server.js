@@ -3,11 +3,16 @@ const Router = require("@koa/router");
 const bodyParser = require("koa-bodyparser");
 const cors = require("@koa/cors");
 const { db, sqlite } = require("./db/connection");
+const createRateLimitMiddleware = require("./middleware/rateLimit");
+const rateLimitConfig = require("./config/rateLimit");
 const gamesRoutes = require("./routes/games");
 const leaderboardRoutes = require("./routes/leaderboard");
 const healthRoutes = require("./routes/health");
 
 const app = new Koa();
+
+// Apply rate limiting first to protect against DoS
+app.use(createRateLimitMiddleware());
 
 app.use(
   bodyParser({

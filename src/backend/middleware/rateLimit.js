@@ -2,7 +2,8 @@ const rateLimit = require('koa-ratelimit');
 const rateLimitConfig = require('../config/rateLimit');
 
 // In-memory store for rate limiting
-// In production, consider using Redis for distributed systems
+// WARNING: This resets on server restart, allowing rate limit bypass
+// For production, use Redis for persistence across restarts and distributed systems
 const rateLimitStore = new Map();
 
 /**
