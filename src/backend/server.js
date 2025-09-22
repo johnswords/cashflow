@@ -47,6 +47,8 @@ const PORT = Number(process.env.BACKEND_PORT) || 4000;
 
 const server = app.listen(PORT, () => {
   console.log(`Cashflow backend running at http://localhost:${PORT}`);
+  console.log(`Environment: ${process.env.NODE_ENV || 'development'}`);
+  console.log(`Rate limiting: ${rateLimitConfig.enabled ? `${rateLimitConfig.max} requests per ${rateLimitConfig.window / 1000}s` : 'disabled'}`);
 });
 
 const gracefulShutdown = () => {
