@@ -112,6 +112,18 @@ Document manual results in PRs until Jest/Vue Test Utils are in place.
 
 ---
 
+## 📐 Phoenix Rewrite Specs
+
+The planned full rewrite is specified in `docs/SPEC.md` and `docs/specs/**`.
+
+Target stack: Elixir, Phoenix, LiveView, plain HEEx/LiveComponents, Ecto, SQLite-first local persistence, and Postgres-compatible schema design. Treat the current Vue/Koa app as legacy implementation inventory; use the SDD hierarchy as the target contract for rewrite work.
+
+```bash
+bash scripts/check-specs.sh
+```
+
+---
+
 ## 🚀 Deployment Notes
 - **Frontend-only (legacy)**: You can still deploy the static build, but multiplayer features require the backend.
 - **Full stack**: Host the Node backend (4000) and serve the Vue build behind the same domain or a reverse proxy. Ensure the `data/` directory is writable.

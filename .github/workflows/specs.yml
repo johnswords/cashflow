@@ -1,0 +1,15 @@
+name: Specs
+
+on:
+  pull_request:
+  push:
+    branches:
+      - main
+
+jobs:
+  check-specs:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Check SDD spec hierarchy
+        run: bash scripts/check-specs.sh

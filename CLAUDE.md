@@ -2,6 +2,8 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+For Phoenix rewrite work, read `docs/SPEC.md` and the relevant `docs/specs/**` surface specs before planning or implementation. The current Vue/Koa app is legacy implementation inventory; the SDD hierarchy is the target rewrite contract.
+
 ## Project Overview
 
 A Vue 2 web application that provides an interactive digital game sheet for the CashFlow board game. It helps players track income, expenses, assets, and liabilities without manual calculations, supporting both "Rat Race" and "Fast Track" game modes.
