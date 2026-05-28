@@ -22,7 +22,7 @@
 - [x] Lobby, new game setup, dashboard, audit, leaderboard, and backup routes
 - [x] Player sheet draft, diff review, save/cancel, stale-tab conflict handling, and notes
 - [x] Fast Track route and sheet rendering
-- [ ] Dense full-sheet investment editing for real estate, businesses, stocks, and Fast Track investments
+- [x] Dense full-sheet investment editing for real estate, businesses, stocks, and Fast Track investments
 - [ ] Correction UX polish with field labels and origin context
 - [ ] Desktop/tablet/phone design review screenshots
 

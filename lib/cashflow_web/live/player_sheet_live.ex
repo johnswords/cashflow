@@ -67,11 +67,12 @@ defmodule CashflowWeb.PlayerSheetLive do
     {:noreply, assign(socket, draft: draft, review: review, save_note: save_note, error: nil)}
   end
 
-  def handle_event("save", %{"sheet" => params}, socket) do
-    draft = apply_form(socket.assigns.draft, params)
+  def handle_event("save", params, socket) do
+    sheet_params = Map.get(params, "sheet", %{})
+    draft = socket.assigns.draft
     player = socket.assigns.player
     event_type = if socket.assigns.origin_event_id, do: "correction", else: "turn"
-    notes = Map.get(params, "notes") || socket.assigns.save_note
+    notes = Map.get(sheet_params, "notes") || socket.assigns.save_note
 
     opts = [
       event_type: event_type,
@@ -121,6 +122,7 @@ defmodule CashflowWeb.PlayerSheetLive do
     else
       sheet
     end
+    |> apply_phase_form(params)
   end
 
   defp apply_children_count(sheet, params) do
@@ -131,6 +133,134 @@ defmodule CashflowWeb.PlayerSheetLive do
 
     put_in(sheet, ["expenses", "children_count"], children)
   end
+
+  defp apply_phase_form(%{"phase" => "fast_track"} = sheet, params) do
+    fast_track_params = Map.get(params, "fast_track", %{})
+    investment_params = Map.get(fast_track_params, "investments", %{})
+
+    fast_track =
+      sheet
+      |> get_in(["fast_track"])
+      |> Map.put(
+        "dream",
+        text_param(fast_track_params, "dream", get_in(sheet, ["fast_track", "dream"]))
+      )
+      |> Map.put(
+        "dream_completed",
+        boolean_param(
+          fast_track_params,
+          "dream_completed",
+          get_in(sheet, ["fast_track", "dream_completed"])
+        )
+      )
+      |> Map.put(
+        "investments",
+        update_rows(get_in(sheet, ["fast_track", "investments"]), investment_params, fn row,
+                                                                                        row_params ->
+          row
+          |> put_text_param(row_params, "name")
+          |> put_money_param(row_params, "cashflow_cents", "cashflow")
+        end)
+      )
+
+    put_in(sheet, ["fast_track"], fast_track)
+  end
+
+  defp apply_phase_form(sheet, params) do
+    investment_params = Map.get(params, "investments", %{})
+
+    sheet
+    |> put_in(
+      ["investments", "real_estate"],
+      update_rows(
+        get_in(sheet, ["investments", "real_estate"]),
+        Map.get(investment_params, "real_estate", %{}),
+        fn row, row_params ->
+          row
+          |> put_text_param(row_params, "name")
+          |> put_money_param(row_params, "down_payment_cents", "down_payment")
+          |> put_money_param(row_params, "cost_cents", "cost")
+          |> put_money_param(row_params, "mortgage_cents", "mortgage")
+          |> put_money_param(row_params, "income_cents", "income")
+        end
+      )
+    )
+    |> put_in(
+      ["investments", "businesses"],
+      update_rows(
+        get_in(sheet, ["investments", "businesses"]),
+        Map.get(investment_params, "businesses", %{}),
+        fn row, row_params ->
+          row
+          |> put_text_param(row_params, "name")
+          |> put_money_param(row_params, "down_payment_cents", "down_payment")
+          |> put_money_param(row_params, "cost_cents", "cost")
+          |> put_money_param(row_params, "liability_cents", "liability")
+          |> put_money_param(row_params, "income_cents", "income")
+        end
+      )
+    )
+    |> put_in(
+      ["investments", "stocks"],
+      update_rows(
+        get_in(sheet, ["investments", "stocks"]),
+        Map.get(investment_params, "stocks", %{}),
+        fn row, row_params ->
+          row
+          |> put_text_param(row_params, "name")
+          |> put_integer_param(row_params, "shares")
+          |> put_money_param(row_params, "cost_per_share_cents", "cost_per_share")
+        end
+      )
+    )
+  end
+
+  defp update_rows(rows, params, update_fun) do
+    rows
+    |> List.wrap()
+    |> Enum.with_index()
+    |> Enum.map(fn {row, index} ->
+      row_params = Map.get(params, Integer.to_string(index), %{})
+      update_fun.(row, row_params)
+    end)
+  end
+
+  defp put_text_param(row, params, key) do
+    Map.put(row, key, text_param(params, key, Map.get(row, key, "")))
+  end
+
+  defp put_money_param(row, params, key, param_key) do
+    current = Map.get(row, key, 0)
+
+    cents =
+      case Money.parse_cents(Map.get(params, param_key, current)) do
+        {:ok, cents} -> cents
+        {:error, _} -> current
+      end
+
+    Map.put(row, key, cents)
+  end
+
+  defp put_integer_param(row, params, key) do
+    Map.put(row, key, parse_non_negative_integer(Map.get(params, key, Map.get(row, key, 0))))
+  end
+
+  defp text_param(params, key, current) do
+    params
+    |> Map.get(key, current || "")
+    |> to_string()
+    |> String.trim()
+  end
+
+  defp boolean_param(params, key, current) do
+    case Map.fetch(params, key) do
+      {:ok, value} -> truthy?(value)
+      :error -> !!current
+    end
+  end
+
+  defp truthy?(value) when is_list(value), do: value |> List.last() |> truthy?()
+  defp truthy?(value), do: value in [true, "true", "1", 1, "on"]
 
   defp sheet_fields(%{"phase" => "fast_track"}), do: @fast_track_money_fields
   defp sheet_fields(_sheet), do: @rat_race_money_fields
@@ -150,7 +280,7 @@ defmodule CashflowWeb.PlayerSheetLive do
     end
   end
 
-  defp money_value(sheet, path), do: sheet |> get_in(path) |> Money.display()
+  defp parse_non_negative_integer(_value), do: 0
 
   defp summary(sheet), do: Calculations.summary(sheet)
 
@@ -212,6 +342,7 @@ defmodule CashflowWeb.PlayerSheetLive do
               fields={sheet_fields}
               draft={@draft}
               note={@save_note}
+              phase={@draft["phase"]}
               readonly={readonly}
               children?={children_field?}
             />
@@ -244,18 +375,6 @@ defmodule CashflowWeb.PlayerSheetLive do
           phx-submit="save"
           class="flex justify-end"
         >
-          <input
-            :for={{_label, key, path} <- sheet_fields}
-            type="hidden"
-            name={"sheet[#{key}]"}
-            value={money_value(@draft, path)}
-          />
-          <input
-            :if={children_field?}
-            type="hidden"
-            name="sheet[children_count]"
-            value={get_in(@draft, ["expenses", "children_count"])}
-          />
           <input type="hidden" name="sheet[notes]" value={@save_note} />
           <.button type="submit">Save Reviewed Changes</.button>
         </.form>
