@@ -2,8 +2,8 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | Import task after target schema stabilizes |
+| Status | Deferred |
+| Implementation | No import in rewrite v1 unless real legacy data is provided |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
@@ -17,6 +17,7 @@
 - Legacy sheet JSON is converted into the current versioned sheet schema.
 - Records that cannot be converted are reported with structured errors and are not partially imported.
 - Import does not mutate the source SQLite database.
+- The tracked Vue/Koa runtime has been removed; any future import must run against an explicitly supplied copy of a legacy SQLite database.
 
 ## Acceptance
 

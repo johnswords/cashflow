@@ -12,7 +12,7 @@
 
 ## Problem
 
-The current app duplicates cashflow math in frontend and backend JavaScript and uses inconsistent bank-loan behavior. Money parsing also strips signs and decimals in shared UI input code.
+The retired Vue/Koa prototype duplicated cashflow math in frontend and backend JavaScript and used inconsistent bank-loan behavior. Money parsing also stripped signs and decimals in shared UI input code.
 
 ## Target Behavior
 

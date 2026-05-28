@@ -2,17 +2,17 @@
 
 Last Verified: 2026-05-27
 Status: Target specification
-Truth Mode: Target, with current primitives listed as migration inventory
+Truth Mode: Target, with retired primitives listed as historical inventory
 
 ## Boundary
 
 The game domain owns the Cashflow rules and state transitions. It must be usable from LiveViews, tests, seeds, import/export code, and any future API without duplicating math or business rules in UI code.
 
-## Current Primitives
+## Retired Prototype Primitives
 
-- Current stores under `src/stores/` define the useful sheet sections: income, expenses, liabilities, assets, investments, fast track, and meta.
-- `src/utils/cashflow.js` and `src/backend/utils/cashflow.js` duplicate passive income, total income, total expenses, and cashflow calculations.
-- `src/utils/diff.js` captures a useful field-level diff concept, but it currently allows arbitrary JSON snapshots.
+- Retired stores under `src/stores/` defined the useful sheet sections: income, expenses, liabilities, assets, investments, fast track, and meta.
+- Retired `src/utils/cashflow.js` and `src/backend/utils/cashflow.js` duplicated passive income, total income, total expenses, and cashflow calculations.
+- Retired `src/utils/diff.js` captured a useful field-level diff concept, but allowed arbitrary JSON snapshots.
 - `PRD.md` names the core entities: Game, Player, AuditLogEntry, and LeaderboardRecord.
 
 ## Target Contexts And Modules
@@ -49,5 +49,5 @@ The game domain owns the Cashflow rules and state transitions. It must be usable
 ## Acceptance
 
 - Domain tests can create a full game, save rat-race turns, transition to fast track, save fast-track turns, complete the game, and verify that later mutations are rejected.
-- Calculation tests prove parity for current known formulas before the old implementation is removed.
+- Calculation tests prove parity for known legacy formulas retained in the spec inventory.
 - No LiveView module performs money math except formatting a value already supplied by the domain.

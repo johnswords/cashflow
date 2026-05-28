@@ -2,7 +2,7 @@
 
 This repository is now centered on the Phoenix LiveView rewrite.
 
-Read `README.md`, `docs/SPEC.md`, and the relevant `docs/specs/**` files before planning or editing. The Vue/Koa app under `src/` is legacy reference material only unless a task explicitly targets it.
+Read `README.md`, `docs/SPEC.md`, and the relevant `docs/specs/**` files before planning or editing. The retired Vue/Koa runtime is no longer tracked source; use `docs/legacy-app-risk-inventory.md` and git history only for historical comparison.
 
 ## Runtime
 

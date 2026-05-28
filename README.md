@@ -1,6 +1,6 @@
 # Cashflow Live
 
-Phoenix LiveView rewrite of the Cashflow game-night sheet. The active app is now an Elixir/Phoenix service with LiveView UI, Ecto persistence, and SQLite-first local storage. The legacy Vue/Koa implementation remains under `src/` as reference material until the Phoenix flow fully replaces it.
+Phoenix LiveView app for Cashflow game-night sheets. The active runtime is an Elixir/Phoenix service with LiveView UI, Ecto persistence, and SQLite-first local storage. The retired Vue/Koa runtime has been removed from tracked source; historical risks and parity notes remain in `docs/legacy-app-risk-inventory.md`.
 
 ## Current Phoenix Capabilities
 
@@ -58,15 +58,15 @@ Game data lives in `data/cashflow_dev.sqlite3`, which is ignored.
 - `lib/cashflow_web/components/` contains HEEx/LiveComponent UI building blocks.
 - `priv/repo/migrations/` contains the SQLite-first Ecto schema.
 
-### Legacy Reference
+### Legacy Inventory
 
-The old Vue/Koa app remains in `src/` for reference while the Phoenix rewrite reaches parity. Do not add new product work to `src/` unless the task explicitly targets legacy behavior.
+The old Vue/Koa runtime has been retired from tracked source. Use `docs/legacy-app-risk-inventory.md` and git history for historical comparison only. Do not reintroduce Node, Vue, Koa, Vite, Svelte, or another SPA runtime without an explicit ADR-style exception.
 
 ## Specification Hierarchy
 
 The rewrite contract lives in `docs/SPEC.md` and `docs/specs/**`.
 
-Target stack: Elixir, Phoenix, LiveView, plain HEEx/LiveComponents, Ecto, SQLite-first local persistence, and Postgres-compatible schema design. Treat the current Vue/Koa app as legacy implementation inventory.
+Target stack: Elixir, Phoenix, LiveView, plain HEEx/LiveComponents, Ecto, SQLite-first local persistence, and Postgres-compatible schema design.
 
 ## Backup Export
 

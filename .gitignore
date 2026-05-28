@@ -1,6 +1,4 @@
 .DS_Store
-node_modules
-/dist
 /data
 /_build
 /deps
@@ -19,11 +17,6 @@ node_modules
 .env.*.local
 .env
 
-# Log files
-npm-debug.log*
-yarn-debug.log*
-yarn-error.log*
-
 # Editor directories and files
 .idea
 .vscode
@@ -32,5 +25,3 @@ yarn-error.log*
 *.njsproj
 *.sln
 *.sw?
-
-package-lock.json

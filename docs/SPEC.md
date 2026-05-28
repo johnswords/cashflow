@@ -1,29 +1,29 @@
 # Cashflow Rewrite Repository Spec
 
 Last Verified: 2026-05-27
-Status: Target specification
-Truth Mode: Mixed current-state inventory and target-mode rewrite contract
+Status: Phoenix implementation contract
+Truth Mode: Current implementation plus retained target invariants
 
 ## Purpose
 
-This repository currently contains a Vue 2 + Koa + SQLite multiplayer Cashflow app. The next implementation target is a full rewrite in Elixir, Phoenix, LiveView, Ecto, and SQLite/Postgres-compatible persistence.
+This repository contains a Phoenix LiveView Cashflow app implemented in Elixir, Phoenix, LiveView, Ecto, and SQLite/Postgres-compatible persistence patterns.
 
-The rewrite should preserve the useful product primitives, discard the fragile frontend/runtime stack, and make the server-side domain model the source of truth for a complete game round.
+The app preserves the useful product primitives from the retired Vue/Koa prototype while making the server-side domain model the source of truth for a complete game round.
 
 ## Current-State Truth
 
-- The current app is a Vue 2/Vuex frontend with a Koa/Kysely/better-sqlite3 backend.
-- The current data model includes `games`, `players`, `audit_log_entries`, and `leaderboard_records`.
-- Existing sheet modules provide useful domain inventory: income, expenses, liabilities, assets, investments, meta, and fast track state.
-- The current runtime is not trusted as the long-term implementation. Known tracked risks are captured in `docs/legacy-app-risk-inventory.md`.
-- `README.md`, `PRD.md`, and `TODO.md` describe shipped or intended Vue-era behavior. Rewrite work should use this spec hierarchy as the target contract.
+- The active runtime is Phoenix LiveView with Ecto-backed SQLite local persistence.
+- The current data model includes `games`, `players`, `audit_events`, and `leaderboard_records`.
+- Current sheet modules provide income, expenses, liabilities, assets, investments, meta, and fast track state.
+- The retired Vue/Koa runtime is removed from tracked source. Known historical risks are captured in `docs/legacy-app-risk-inventory.md`.
+- `README.md`, `PRD.md`, and `TODO.md` now describe the Phoenix implementation and follow-up work. This spec hierarchy remains the target contract.
 
-## Target Architecture
+## Architecture
 
 - Runtime: Elixir + Phoenix.
 - UI: Phoenix LiveView with plain HEEx, function components, and stateful LiveComponents where they materially reduce local UI complexity.
 - Persistence: Ecto schemas and migrations. SQLite is the default local and family-night database; Postgres compatibility is required for future hosted deployment.
-- Client model: server-rendered HTML over LiveView. No Vue, Vite, Svelte, LiveSvelte, React, or SPA shell in the v1 rewrite.
+- Client model: server-rendered HTML over LiveView. No Vue, Vite, Svelte, LiveSvelte, React, or SPA shell in the v1 app.
 - Domain model: Elixir contexts own game lifecycle, sheet calculations, validation, audit events, leaderboard snapshots, and backups.
 - Assets: CSS and light JavaScript hooks only where LiveView cannot provide the interaction ergonomically.
 
@@ -80,7 +80,7 @@ Plain LiveView, HEEx, function components, LiveComponents, and Phoenix JS comman
 - Winner selection, completion ceremony, immutable recap, and leaderboard.
 - Local single-machine hosting with durable SQLite storage.
 
-## Explicit Non-Goals For Rewrite v1
+## Explicit Non-Goals For V1
 
 - Authentication, authorization, or internet multiplayer.
 - A JavaScript SPA framework.
@@ -97,21 +97,22 @@ Plain LiveView, HEEx, function components, LiveComponents, and Phoenix JS comman
 
 ## Validation Contract
 
-The Phoenix rewrite must eventually prove this spec with:
+The Phoenix app proves this spec with:
 
-- `mix format --check-formatted`
-- `mix test`
+- `mise exec -- mix format --check-formatted`
+- `mise exec -- mix test`
 - Ecto migration tests against SQLite by default.
 - A Postgres compatibility check before any hosted deployment path is accepted.
 - LiveView tests for create game, sheet edit, correction, completion, recap, and leaderboard flows.
 - Stale-session/conflict tests for multiple browser tabs editing the same player sheet.
-- Manual design review screenshots for desktop, tablet, and phone viewports before replacing the current app.
+- Manual design review screenshots for desktop, tablet, and phone viewports before broad use.
 
-## Implementation Order
+## Rollout Checkpoints
 
-1. Scaffold Phoenix + LiveView + Ecto with SQLite-first local configuration and Postgres-compatible migrations.
-2. Build the game-domain context and calculation tests before designing the sheet UI.
-3. Implement Ecto schema, migration, and seed/demo data.
-4. Build LiveView flows from lobby to completed recap.
-5. Add backup/export and operational guardrails.
-6. Migrate or archive existing SQLite data only after the target schema is stable.
+1. Phoenix + LiveView + Ecto scaffolded with SQLite-first local configuration and Postgres-compatible migration discipline.
+2. Game-domain context and calculation tests implemented before dense sheet UI work.
+3. Ecto schema, migration, and seed/demo data implemented.
+4. LiveView flows built from lobby to completed recap.
+5. Backup/export and operational guardrails added.
+6. Vue/Koa runtime retired from tracked source after Phoenix reached a playable round.
+7. One-off legacy SQLite import remains deferred unless real historical data must be preserved.

@@ -23,9 +23,9 @@ mise exec -- mix format --check-formatted
 bash scripts/check-specs.sh
 ```
 
-## Legacy Reference
+## Legacy Inventory
 
-The Vue/Koa app under `src/` is legacy reference material. Do not add new product work there unless the user explicitly asks for legacy behavior. Useful legacy facts and risks are tracked in `docs/legacy-app-risk-inventory.md`.
+The Vue/Koa runtime has been removed from tracked source. Useful legacy facts and risks are preserved in `docs/legacy-app-risk-inventory.md` and git history. Do not reintroduce Node, Vue, Koa, Vite, Svelte, or another SPA runtime without an explicit ADR-style exception.
 
 ## Validation Expectations
 

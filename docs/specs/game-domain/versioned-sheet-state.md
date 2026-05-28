@@ -12,7 +12,7 @@
 
 ## Problem
 
-The current backend accepts arbitrary `sheet_state`, `before_snapshot`, and `after_snapshot` payloads. That makes complete-game trust, corrections, calculations, and migrations fragile.
+The retired backend accepted arbitrary `sheet_state`, `before_snapshot`, and `after_snapshot` payloads. That made complete-game trust, corrections, calculations, and migrations fragile.
 
 ## Target Behavior
 
