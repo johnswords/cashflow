@@ -11,7 +11,10 @@ Phoenix LiveView app for Cashflow game-night sheets. The active runtime is an El
 - Capture audit events for turns, corrections, phase transitions, and completion.
 - Complete games with immutable leaderboard snapshots.
 - Browse lobby, dashboard, sheet, audit, leaderboard, and JSON backup/export routes.
+- Restore a validated JSON backup into a fresh or replaced local database.
 - Seed demo active/completed games for local review.
+
+Not yet implemented: health endpoint, correction filtering/load-more, and real Postgres gate execution against hosted infrastructure.
 
 ## Prerequisites
 
@@ -44,6 +47,8 @@ Game data lives in `data/cashflow_dev.sqlite3`, which is ignored.
 | `mise exec -- mix ecto.migrate` | Apply Ecto migrations |
 | `mise exec -- mix phx.server` | Start the Phoenix dev server |
 | `mise exec -- mix assets.build` | Build CSS/JS assets |
+| `mise exec -- mix cashflow.backup.restore path/to/backup.json [--replace]` | Restore a validated JSON backup |
+| `bash scripts/check-postgres-compat.sh` | Run the Postgres compatibility gate when `DATABASE_URL` is set |
 | `bash scripts/check-specs.sh` | Validate the SDD spec hierarchy |
 
 ## Architecture
@@ -75,6 +80,15 @@ curl http://localhost:4000/backup.json
 ```
 
 The export includes games, players, audit events, leaderboard records, schema version, and export timestamp.
+
+## Backup Restore
+
+```bash
+mise exec -- mix cashflow.backup.restore path/to/backup.json
+mise exec -- mix cashflow.backup.restore path/to/backup.json --replace
+```
+
+Restore validates schema version, IDs, timestamps, relationships, completed-game snapshots, and audit field paths before writing. It refuses to import into a non-empty database unless `--replace` is supplied.
 
 ## Validation
 

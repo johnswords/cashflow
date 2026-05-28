@@ -2,21 +2,27 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | `CashflowWeb.AuditLive`, correction draft flow |
+| Status | Partial |
+| Implementation | Partial |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/game-domain/audit-event-model.md` |
-| Truth Mode | Target |
+| Truth Mode | Current plus target gaps |
+
+## Current Behavior
+
+- Shows a chronological audit timeline with player, event type, notes, changed field paths, and correction launch links.
+- Completed games hide correction launch buttons.
+- Starting a correction opens the player sheet with `origin_event_id`.
+- Correction drafts show the origin event, original note, and friendly labels for changed fields.
+- Audit timeline badges show friendly field labels while preserving raw paths in badge titles.
+- Confirming a correction writes a correction event and updates the player sheet transactionally.
 
 ## Target Behavior
 
-- Shows a chronological audit timeline with player, event type, changed fields, notes, and origin links.
 - Filters by player and event type.
 - Loads more events without disorienting scroll position.
-- Starting a correction opens a draft based on the selected event without changing canonical state.
-- Confirming a correction writes a correction event and updates the player sheet transactionally.
 
 ## Acceptance
 

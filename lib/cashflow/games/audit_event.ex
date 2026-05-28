@@ -2,9 +2,12 @@ defmodule Cashflow.Games.AuditEvent do
   use Ecto.Schema
   import Ecto.Changeset
 
+  alias Cashflow.Sheets
+
   @primary_key {:id, :binary_id, autogenerate: true}
   @foreign_key_type :binary_id
   @event_types ~w(turn correction phase_transition completion)
+  @game_paths ~w(game.status game.winner_player_id)
 
   schema "audit_events" do
     field :event_type, :string
@@ -43,6 +46,7 @@ defmodule Cashflow.Games.AuditEvent do
       :origin_event_id
     ])
     |> normalize_field_paths()
+    |> validate_field_paths()
     |> validate_required([
       :game_id,
       :player_id,
@@ -69,4 +73,23 @@ defmodule Cashflow.Games.AuditEvent do
         put_change(changeset, :field_paths_data, %{"paths" => []})
     end
   end
+
+  defp validate_field_paths(changeset) do
+    validate_change(changeset, :field_paths_data, fn :field_paths_data, data ->
+      paths = Map.get(data || %{}, "paths", [])
+
+      invalid_paths =
+        paths
+        |> List.wrap()
+        |> Enum.reject(&valid_field_path?/1)
+
+      case invalid_paths do
+        [] -> []
+        _ -> [field_paths_data: "contains invalid paths: #{Enum.join(invalid_paths, ", ")}"]
+      end
+    end)
+  end
+
+  defp valid_field_path?(path) when path in @game_paths, do: true
+  defp valid_field_path?(path), do: Sheets.valid_path?(path)
 end

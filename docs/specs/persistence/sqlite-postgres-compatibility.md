@@ -2,22 +2,29 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | Adapter-aware Ecto config and migration discipline |
+| Status | Partial |
+| Implementation | Partial |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `ecto-schema-and-migrations.md` |
-| Truth Mode | Target |
+| Truth Mode | Current SQLite behavior plus target Postgres gate |
+
+## Current Behavior
+
+- SQLite is the default for local play and test execution.
+- The schema uses integer cents for persisted money.
+- JSON/map usage is limited to versioned sheet state, summary, audit field paths, and audit snapshots.
+- Backup/export format is independent of the physical adapter.
+- `scripts/check-postgres-compat.sh` creates the equivalent logical Postgres schema in a temporary schema, inserts representative rows, and rolls back.
+- The gate fails unless `DATABASE_URL` is provided, except when `CASHFLOW_SKIP_POSTGRES_COMPAT=1` explicitly skips it.
 
 ## Target Behavior
 
-- SQLite is the default for local play: file-backed, WAL mode where available, foreign keys enabled.
-- Postgres can run the same logical schema for hosted deployments.
+- The compatibility gate must pass against the actual hosted Postgres database before hosted deployment.
 - Tests document adapter differences rather than discovering them during release.
-- JSON/map usage is intentionally limited and versioned.
 - Check constraints are written in a way that is either adapter-neutral or documented with equivalent adapter-specific migrations.
-- Integer cents are the cross-adapter money representation. Floats are not used for persisted money.
+- A documented Postgres check can run migrations and domain tests before any hosted launch.
 
 ## Known Adapter Considerations
 

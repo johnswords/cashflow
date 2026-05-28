@@ -5,6 +5,8 @@ defmodule CashflowWeb.SheetSectionComponent do
 
   @impl true
   def render(assigns) do
+    assigns = Map.put_new(assigns, :errors, %{})
+
     ~H"""
     <section class="rounded-lg bg-base-100 p-4 shadow-sm lg:col-span-2">
       <h2 class="mb-3 text-xl font-semibold">{@title}</h2>
@@ -15,6 +17,7 @@ defmodule CashflowWeb.SheetSectionComponent do
           label={label}
           value={money_value(@draft, path)}
           disabled={@readonly}
+          errors={field_errors(@errors, key)}
         />
         <.input
           :if={@children?}
@@ -24,16 +27,17 @@ defmodule CashflowWeb.SheetSectionComponent do
           label="Children"
           value={get_in(@draft, ["expenses", "children_count"])}
           disabled={@readonly}
+          errors={field_errors(@errors, "children_count")}
         />
         <.input name="sheet[notes]" label="Save note" value={@note} disabled={@readonly} />
       </div>
 
       <div :if={@phase == "rat_race"} class="mt-5 grid gap-5">
-        <.rat_race_investments draft={@draft} readonly={@readonly} />
+        <.rat_race_investments draft={@draft} readonly={@readonly} errors={@errors} />
       </div>
 
       <div :if={@phase == "fast_track"} class="mt-5 grid gap-5">
-        <.fast_track_details draft={@draft} readonly={@readonly} />
+        <.fast_track_details draft={@draft} readonly={@readonly} errors={@errors} />
       </div>
     </section>
     """
@@ -41,8 +45,11 @@ defmodule CashflowWeb.SheetSectionComponent do
 
   attr :draft, :map, required: true
   attr :readonly, :boolean, required: true
+  attr :errors, :map, default: %{}
 
   defp rat_race_investments(assigns) do
+    assigns = Map.put_new(assigns, :errors, %{})
+
     ~H"""
     <section class="grid gap-3">
       <h3 class="text-lg font-semibold">Real Estate</h3>
@@ -61,24 +68,28 @@ defmodule CashflowWeb.SheetSectionComponent do
           label="Down Payment"
           value={money_value(row, ["down_payment_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("real_estate", index, "down_payment"))}
         />
         <.input
           name={investment_name("real_estate", index, "cost")}
           label="Cost"
           value={money_value(row, ["cost_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("real_estate", index, "cost"))}
         />
         <.input
           name={investment_name("real_estate", index, "mortgage")}
           label="Mortgage"
           value={money_value(row, ["mortgage_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("real_estate", index, "mortgage"))}
         />
         <.input
           name={investment_name("real_estate", index, "income")}
           label="Cashflow"
           value={money_value(row, ["income_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("real_estate", index, "income"))}
         />
       </div>
     </section>
@@ -100,24 +111,28 @@ defmodule CashflowWeb.SheetSectionComponent do
           label="Down Payment"
           value={money_value(row, ["down_payment_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("businesses", index, "down_payment"))}
         />
         <.input
           name={investment_name("businesses", index, "cost")}
           label="Cost"
           value={money_value(row, ["cost_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("businesses", index, "cost"))}
         />
         <.input
           name={investment_name("businesses", index, "liability")}
           label="Liability"
           value={money_value(row, ["liability_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("businesses", index, "liability"))}
         />
         <.input
           name={investment_name("businesses", index, "income")}
           label="Cashflow"
           value={money_value(row, ["income_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("businesses", index, "income"))}
         />
       </div>
     </section>
@@ -141,12 +156,14 @@ defmodule CashflowWeb.SheetSectionComponent do
           label="Shares"
           value={integer_value(row, "shares")}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("stocks", index, "shares"))}
         />
         <.input
           name={investment_name("stocks", index, "cost_per_share")}
           label="Cost / Share"
           value={money_value(row, ["cost_per_share_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, investment_error_key("stocks", index, "cost_per_share"))}
         />
       </div>
     </section>
@@ -155,8 +172,11 @@ defmodule CashflowWeb.SheetSectionComponent do
 
   attr :draft, :map, required: true
   attr :readonly, :boolean, required: true
+  attr :errors, :map, default: %{}
 
   defp fast_track_details(assigns) do
+    assigns = Map.put_new(assigns, :errors, %{})
+
     ~H"""
     <section class="grid gap-3 rounded border border-base-300 p-3">
       <h3 class="text-lg font-semibold">Dream</h3>
@@ -194,6 +214,7 @@ defmodule CashflowWeb.SheetSectionComponent do
           label="Cashflow"
           value={money_value(row, ["cashflow_cents"])}
           disabled={@readonly}
+          errors={field_errors(@errors, fast_track_error_key(index, "cashflow"))}
         />
       </div>
     </section>
@@ -218,4 +239,11 @@ defmodule CashflowWeb.SheetSectionComponent do
 
   defp fast_track_investment_name(index, field),
     do: "sheet[fast_track][investments][#{index}][#{field}]"
+
+  defp investment_error_key(kind, index, field),
+    do: "investments.#{kind}.#{index}.#{field}"
+
+  defp fast_track_error_key(index, field), do: "fast_track.investments.#{index}.#{field}"
+
+  defp field_errors(errors, key), do: Map.get(errors || %{}, key, [])
 end

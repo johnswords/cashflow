@@ -38,6 +38,39 @@ defmodule Cashflow.SheetsTest do
     assert sheet["assets"]["savings_cents"] == -2_500
   end
 
+  test "normalization prunes unknown keys from the versioned sheet schema" do
+    assert {:ok, sheet} =
+             Sheets.normalize(%{
+               "unexpected" => "drop me",
+               "income" => %{"salary_cents" => "$3,000", "bonus_cents" => "$500"},
+               "investments" => %{
+                 "real_estate" => %{
+                   "0" => %{"name" => "Duplex", "secret" => "drop me"}
+                 }
+               }
+             })
+
+    refute Map.has_key?(sheet, "unexpected")
+    refute Map.has_key?(sheet["income"], "bonus_cents")
+    refute Map.has_key?(get_in(sheet, ["investments", "real_estate", Access.at(0)]), "secret")
+  end
+
+  test "valid_path and field_label are schema-aware" do
+    assert Sheets.valid_path?("income.salary_cents")
+    assert Sheets.valid_path?("investments.real_estate.0.income_cents")
+    assert Sheets.valid_path?("fast_track.investments.11.cashflow_cents")
+
+    refute Sheets.valid_path?("income.bonus_cents")
+    refute Sheets.valid_path?("fast_track.investments.12.cashflow_cents")
+    refute Sheets.valid_path?("bogus")
+
+    assert Sheets.field_label("income.salary_cents") == "Salary"
+    assert Sheets.field_label("investments.real_estate.0.income_cents") == "Property 1 Income"
+
+    assert Sheets.field_label("fast_track.investments.11.cashflow_cents") ==
+             "Fast Track Investment 12 Cashflow"
+  end
+
   test "normalizes nested rat-race investment rows" do
     assert {:ok, sheet} =
              Sheets.normalize(%{

@@ -65,10 +65,10 @@ defmodule CashflowWeb.LobbyLive do
             </div>
             <ol class="grid gap-2">
               <li
-                :for={{record, index} <- Enum.with_index(@leaderboard_records, 1)}
+                :for={{record, rank} <- ranked_records(@leaderboard_records)}
                 class="flex items-center justify-between rounded border border-base-300 px-3 py-2"
               >
-                <span>{index}. {record.player_name}</span>
+                <span>{rank}. {record.player_name}</span>
                 <strong>{money(record.cashflow_cents)}</strong>
               </li>
               <p

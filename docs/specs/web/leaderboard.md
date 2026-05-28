@@ -2,20 +2,25 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | `CashflowWeb.LeaderboardLive` |
+| Status | Partial |
+| Implementation | Partial |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/game-domain/cashflow-calculations.md`, `docs/specs/persistence/ecto-schema-and-migrations.md` |
-| Truth Mode | Target |
+| Truth Mode | Current plus target gaps |
+
+## Current Behavior
+
+- Ranks immutable completion snapshots by cashflow and completion date.
+- Links each record to `/games/{id}`.
+- Shows an empty state when no games are completed.
+- Tied cashflow values share rank.
+- Mobile view keeps all columns reachable with horizontal table scroll.
 
 ## Target Behavior
 
-- Ranks immutable completion snapshots by cashflow and completion date.
 - Supports filters for player, timeframe, and phase where data exists.
-- Links each record to `/games/{id}` recap mode.
-- Handles ties predictably and visibly.
 
 ## Acceptance
 

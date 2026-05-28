@@ -9,6 +9,10 @@ defmodule Cashflow.Games do
   alias Cashflow.{Calculations, Repo, Sheets}
   alias Cashflow.Games.{AuditEvent, Game, LeaderboardRecord, Player}
 
+  def subscribe_to_game(game_id) do
+    Phoenix.PubSub.subscribe(Cashflow.PubSub, game_topic(game_id))
+  end
+
   def list_games do
     Game
     |> order_by([g], desc: g.updated_at)
@@ -91,65 +95,68 @@ defmodule Cashflow.Games do
     origin_event_id = opts[:origin_event_id]
     baseline_lock_version = opts[:baseline_lock_version]
 
-    Repo.transaction(fn ->
-      repo = Repo
-      game = repo.get!(Game, game_id)
-      player = repo.get_by!(Player, id: player_id, game_id: game_id)
+    result =
+      Repo.transaction(fn ->
+        repo = Repo
+        game = repo.get!(Game, game_id)
+        player = repo.get_by!(Player, id: player_id, game_id: game_id)
 
-      ensure_active!(repo, game)
-      ensure_current!(repo, player, baseline_lock_version)
-      validate_origin!(repo, game, player, origin_event_id, event_type)
+        ensure_active!(repo, game)
+        ensure_current!(repo, player, baseline_lock_version)
+        validate_origin!(repo, game, player, origin_event_id, event_type)
 
-      sheet =
-        case Sheets.normalize(sheet) do
-          {:ok, sheet} -> sheet
-          {:error, reason} -> repo.rollback({:invalid_sheet, reason})
+        sheet =
+          case Sheets.normalize(sheet) do
+            {:ok, sheet} -> sheet
+            {:error, reason} -> repo.rollback({:invalid_sheet, reason})
+          end
+
+        diff = Sheets.diff(player.sheet_state, sheet)
+        field_paths = diff["field_paths"]
+
+        if field_paths == [] and event_type in ["turn", "correction"] do
+          repo.rollback(:no_changes)
         end
 
-      diff = Sheets.diff(player.sheet_state, sheet)
-      field_paths = diff["field_paths"]
+        player_changeset =
+          Player.sheet_changeset(player, %{
+            phase: sheet["phase"],
+            sheet_version: sheet["schema_version"],
+            sheet_state: sheet,
+            summary: summary_data(sheet),
+            last_saved_at: DateTime.utc_now(:second)
+          })
 
-      if field_paths == [] and event_type in ["turn", "correction"] do
-        repo.rollback(:no_changes)
-      end
+        player =
+          case repo.update(player_changeset) do
+            {:ok, player} -> player
+            {:error, changeset} -> repo.rollback(changeset)
+          end
 
-      player_changeset =
-        Player.sheet_changeset(player, %{
-          phase: sheet["phase"],
-          sheet_version: sheet["schema_version"],
-          sheet_state: sheet,
-          summary: summary_data(sheet),
-          last_saved_at: DateTime.utc_now(:second)
-        })
+        audit_attrs = %{
+          game_id: game.id,
+          player_id: player.id,
+          event_type: event_type,
+          sheet_schema_version: sheet["schema_version"],
+          baseline_lock_version: baseline_lock_version,
+          resulting_lock_version: player.lock_version,
+          field_paths: field_paths,
+          changes: %{"changes" => diff["changes"]},
+          before_snapshot: diff["before_snapshot"],
+          after_snapshot: diff["after_snapshot"],
+          notes: notes,
+          origin_event_id: origin_event_id
+        }
 
-      player =
-        case repo.update(player_changeset) do
-          {:ok, player} -> player
-          {:error, changeset} -> repo.rollback(changeset)
-        end
+        event =
+          %AuditEvent{}
+          |> AuditEvent.changeset(audit_attrs)
+          |> repo.insert!()
 
-      audit_attrs = %{
-        game_id: game.id,
-        player_id: player.id,
-        event_type: event_type,
-        sheet_schema_version: sheet["schema_version"],
-        baseline_lock_version: baseline_lock_version,
-        resulting_lock_version: player.lock_version,
-        field_paths: field_paths,
-        changes: %{"changes" => diff["changes"]},
-        before_snapshot: diff["before_snapshot"],
-        after_snapshot: diff["after_snapshot"],
-        notes: notes,
-        origin_event_id: origin_event_id
-      }
+        %{player: player, audit_event: event}
+      end)
 
-      event =
-        %AuditEvent{}
-        |> AuditEvent.changeset(audit_attrs)
-        |> repo.insert!()
-
-      %{player: player, audit_event: event}
-    end)
+    broadcast_game_update(result, game_id)
   end
 
   def transition_player_to_fast_track(game_id, player_id, baseline_lock_version) do
@@ -174,68 +181,71 @@ defmodule Cashflow.Games do
     winner_comment = Map.get(attrs, "winner_comment")
     completed_at = DateTime.utc_now(:second)
 
-    Repo.transaction(fn ->
-      repo = Repo
+    result =
+      Repo.transaction(fn ->
+        repo = Repo
 
-      game =
-        Game
-        |> repo.get!(game_id)
-        |> repo.preload(:players)
+        game =
+          Game
+          |> repo.get!(game_id)
+          |> repo.preload(:players)
 
-      ensure_active!(repo, game)
+        ensure_active!(repo, game)
 
-      winner =
-        Enum.find(game.players, &(&1.id == winner_player_id)) ||
-          repo.rollback(:invalid_winner)
+        winner =
+          Enum.find(game.players, &(&1.id == winner_player_id)) ||
+            repo.rollback(:invalid_winner)
 
-      game =
-        game
-        |> Game.complete_changeset(%{
-          status: "completed",
-          completed_at: completed_at,
-          winner_player_id: winner.id,
-          winner_comment: winner_comment
-        })
-        |> repo.update!()
-
-      records =
-        Enum.map(game.players, fn player ->
-          summary = Calculations.summary(player.sheet_state)
-
-          %LeaderboardRecord{}
-          |> LeaderboardRecord.changeset(%{
-            game_id: game.id,
-            player_id: player.id,
-            player_name: player.name,
-            game_title: game.title,
-            phase: summary.phase,
-            cash_cents: summary.cash_cents,
-            passive_income_cents: summary.passive_income_cents,
-            total_income_cents: summary.total_income_cents,
-            total_expenses_cents: summary.total_expenses_cents,
-            cashflow_cents: summary.cashflow_cents,
-            winner_comment: if(player.id == winner.id, do: winner_comment),
-            captured_at: completed_at,
-            completed_at: completed_at
+        game =
+          game
+          |> Game.complete_changeset(%{
+            status: "completed",
+            completed_at: completed_at,
+            winner_player_id: winner.id,
+            winner_comment: winner_comment
           })
-          |> repo.insert!()
-        end)
+          |> repo.update!()
 
-      %AuditEvent{}
-      |> AuditEvent.changeset(%{
-        game_id: game.id,
-        player_id: winner.id,
-        event_type: "completion",
-        sheet_schema_version: winner.sheet_version,
-        baseline_lock_version: winner.lock_version,
-        resulting_lock_version: winner.lock_version,
-        field_paths: ["game.status", "game.winner_player_id"],
-        notes: winner_comment
-      })
-      |> repo.insert!()
+        records =
+          Enum.map(game.players, fn player ->
+            summary = Calculations.summary(player.sheet_state)
 
-      %{game: game, leaderboard_records: records}
-    end)
+            %LeaderboardRecord{}
+            |> LeaderboardRecord.changeset(%{
+              game_id: game.id,
+              player_id: player.id,
+              player_name: player.name,
+              game_title: game.title,
+              phase: summary.phase,
+              cash_cents: summary.cash_cents,
+              passive_income_cents: summary.passive_income_cents,
+              total_income_cents: summary.total_income_cents,
+              total_expenses_cents: summary.total_expenses_cents,
+              cashflow_cents: summary.cashflow_cents,
+              winner_comment: if(player.id == winner.id, do: winner_comment),
+              captured_at: completed_at,
+              completed_at: completed_at
+            })
+            |> repo.insert!()
+          end)
+
+        %AuditEvent{}
+        |> AuditEvent.changeset(%{
+          game_id: game.id,
+          player_id: winner.id,
+          event_type: "completion",
+          sheet_schema_version: winner.sheet_version,
+          baseline_lock_version: winner.lock_version,
+          resulting_lock_version: winner.lock_version,
+          field_paths: ["game.status", "game.winner_player_id"],
+          notes: winner_comment
+        })
+        |> repo.insert!()
+
+        %{game: game, leaderboard_records: records}
+      end)
+
+    broadcast_game_update(result, game_id)
   end
 
   def list_audit_events(game_id) do
@@ -244,6 +254,13 @@ defmodule Cashflow.Games do
     |> order_by([e], desc: e.inserted_at)
     |> preload(:player)
     |> Repo.all()
+  end
+
+  def get_audit_event!(game_id, event_id) do
+    AuditEvent
+    |> where([e], e.game_id == ^game_id and e.id == ^event_id)
+    |> preload(:player)
+    |> Repo.one!()
   end
 
   def list_leaderboard_records do
@@ -277,6 +294,15 @@ defmodule Cashflow.Games do
     |> Calculations.summary()
     |> Map.new(fn {key, value} -> {to_string(key), value} end)
   end
+
+  defp broadcast_game_update({:ok, _} = result, game_id) do
+    Phoenix.PubSub.broadcast(Cashflow.PubSub, game_topic(game_id), {:game_updated, game_id})
+    result
+  end
+
+  defp broadcast_game_update(result, _game_id), do: result
+
+  defp game_topic(game_id), do: "games:#{game_id}"
 
   defp normalize_roster(players) when is_list(players) do
     active_players =

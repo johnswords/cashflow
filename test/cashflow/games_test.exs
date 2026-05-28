@@ -2,6 +2,7 @@ defmodule Cashflow.GamesTest do
   use Cashflow.DataCase, async: false
 
   alias Cashflow.Games
+  alias Cashflow.Games.AuditEvent
 
   describe "create_game/1" do
     test "creates an active game with normalized players and sheets" do
@@ -58,6 +59,23 @@ defmodule Cashflow.GamesTest do
     assert current_version == updated.lock_version
   end
 
+  test "saving a player sheet broadcasts game updates" do
+    {:ok, game} = fixture_game()
+    player = hd(game.players)
+    game_id = game.id
+
+    :ok = Games.subscribe_to_game(game_id)
+
+    sheet = put_in(player.sheet_state, ["income", "salary_cents"], 300_000)
+
+    assert {:ok, _} =
+             Games.save_player_sheet(game_id, player.id, sheet,
+               baseline_lock_version: player.lock_version
+             )
+
+    assert_receive {:game_updated, ^game_id}
+  end
+
   test "completion snapshots leaderboard and blocks later sheet saves" do
     {:ok, game} = fixture_game()
     player = hd(game.players)
@@ -104,6 +122,22 @@ defmodule Cashflow.GamesTest do
                event_type: "correction",
                baseline_lock_version: player.lock_version
              )
+  end
+
+  test "audit events reject field paths outside the versioned schema" do
+    changeset =
+      AuditEvent.changeset(%AuditEvent{}, %{
+        game_id: Ecto.UUID.generate(),
+        player_id: Ecto.UUID.generate(),
+        event_type: "turn",
+        sheet_schema_version: 1,
+        field_paths: ["income.salary_cents", "income.bonus_cents"]
+      })
+
+    refute changeset.valid?
+
+    assert %{field_paths_data: ["contains invalid paths: income.bonus_cents"]} =
+             errors_on(changeset)
   end
 
   defp fixture_game do

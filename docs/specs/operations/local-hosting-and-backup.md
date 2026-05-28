@@ -2,22 +2,28 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | Phoenix release/dev commands, Ecto tasks, backup scripts |
+| Status | Current |
+| Implementation | Complete for local v1 |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/persistence/SPEC.md` |
-| Truth Mode | Target |
+| Truth Mode | Current plus target gaps |
 
-## Target Behavior
+## Current Behavior
 
-- Development setup documents Elixir, Erlang/OTP, Phoenix, SQLite, and optional Postgres prerequisites.
-- A single command starts the app for local game night after setup.
-- SQLite data path is explicit and not committed.
-- Backup exports include games, players, audit events, leaderboard records, and schema metadata.
+- README documents `mise`, SQLite, setup, test, server, and asset commands.
+- `mise exec -- mix setup` prepares dependencies, database, seed data, and assets.
+- `mise exec -- mix phx.server` starts the app for local play.
+- SQLite data path is explicit and ignored by git.
+- Backup export includes games, players, audit events, leaderboard records, schema version, and export timestamp.
+- Backup restore validates schema version, required collections, UUIDs, datetimes, relationships, completed-game snapshots, and audit field paths before writing.
+- Restore refuses to import into a non-empty database unless `--replace` is supplied.
+- Demo seed data creates a realistic active game and completed game.
+
+## Behavior
+
 - Restore validates schema version before writing.
-- Demo seed data can create a realistic active game and completed game for design review.
 
 ## Acceptance
 

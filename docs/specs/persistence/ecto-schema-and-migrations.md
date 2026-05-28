@@ -2,21 +2,28 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | Ecto schemas, migrations, changesets, `Ecto.Multi` |
+| Status | Partial |
+| Implementation | Partial |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/game-domain/versioned-sheet-state.md`, `docs/specs/game-domain/audit-event-model.md` |
-| Truth Mode | Target |
+| Truth Mode | Current plus target gaps |
+
+## Current Behavior
+
+- Migrations create `games`, `players`, `audit_events`, and `leaderboard_records` with binary IDs, timestamps, foreign keys, and indexes.
+- Schemas expose changesets for externally supplied fields.
+- Domain contexts own game, player, audit, leaderboard, and export writes.
+- Turn saves, corrections, phase transitions, and completion are transactional.
+- Seed data uses public context functions.
+- Mutable game/player sheet records use optimistic locking.
+- Backup restore imports validated rows inside a transaction and preserves completed-game immutability.
 
 ## Target Behavior
 
-- Migrations create all core tables with explicit primary keys, foreign keys, timestamps, and indexes.
-- Schemas expose changesets for all externally supplied fields.
-- Domain contexts own insert/update/delete operations.
-- Turn saves, corrections, phase transitions, and completion are transactional.
-- Seed data uses public context functions, not raw database writes.
+- Run the adapter compatibility gate against a real Postgres database before hosted deployment.
+- Add stronger database-level constraints where practical without weakening SQLite compatibility.
 
 ## Schema Notes
 
@@ -29,7 +36,8 @@
 
 ## Acceptance
 
-- Migration tests verify required tables and indexes exist.
+- SQLite migrations run through `mix setup` and test setup.
 - Changeset tests cover invalid status, duplicate colors, duplicate names, invalid event type, and invalid sheet version.
 - Transaction tests prove partial writes roll back.
 - Stale update tests prove older sheet drafts cannot overwrite newer records.
+- Restore tests prove completed-game snapshots remain immutable after import.

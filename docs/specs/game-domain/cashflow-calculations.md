@@ -2,25 +2,25 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | `Cashflow.Calculations` with integer-cent storage and Decimal-backed helpers |
+| Status | Current |
+| Implementation | Complete |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `versioned-sheet-state.md` |
-| Truth Mode | Target |
+| Truth Mode | Current |
 
 ## Problem
 
 The retired Vue/Koa prototype duplicated cashflow math in frontend and backend JavaScript and used inconsistent bank-loan behavior. Money parsing also stripped signs and decimals in shared UI input code.
 
-## Target Behavior
+## Current Behavior
 
 - Calculations live in one Elixir module and are called by contexts and LiveViews.
 - Money parsing accepts signed values where the sheet allows them.
-- The persisted money representation is signed integer cents. Display and calculations may convert through `Decimal`, but floats are forbidden.
+- The persisted money representation is signed integer cents. Calculations stay in integer space and floats are forbidden.
 - Display formatting is separate from domain parsing.
-- Calculations return explicit summary structs for dashboard, audit, completion, and leaderboard use.
+- Calculations return summary maps for dashboard, audit, completion, and leaderboard use.
 
 ## Required Calculations
 
@@ -35,6 +35,6 @@ The retired Vue/Koa prototype duplicated cashflow math in frontend and backend J
 
 ## Acceptance
 
-- Golden tests cover representative current sheet states from the legacy app.
+- Tests cover representative rat-race, fast-track eligibility, bank-loan payment, child-expense, and large-integer rounding behavior.
 - Calculation results are identical whether called from a LiveView event, seed script, import, or completion flow.
 - No user-entered money value is coerced through JavaScript-only parsing.

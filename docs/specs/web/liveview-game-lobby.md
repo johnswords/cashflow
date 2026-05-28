@@ -2,20 +2,24 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | `CashflowWeb.LobbyLive` |
+| Status | Partial |
+| Implementation | Partial |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/web/SPEC.md`, `docs/specs/game-domain/SPEC.md` |
-| Truth Mode | Target |
+| Truth Mode | Current plus target gaps |
+
+## Current Behavior
+
+- Shows primary actions for new game, active games, completed recaps, and leaderboard.
+- Lists resumable active games by most recently updated.
+- Lists completed games as recap links.
+- Shows empty states with direct actions.
 
 ## Target Behavior
 
-- Shows primary actions for new game, active games, completed games, leaderboard, and local backup/export.
-- Lists resumable active games by most recently updated.
-- Lists recent completed games as recap links, not mutable resume links.
-- Shows empty states with direct actions.
+- Add a visible local backup/export affordance.
 - Shows database health and backup freshness only where useful to the host.
 
 ## Acceptance

@@ -1,14 +1,14 @@
 # Web UI Surface Spec
 
 Last Verified: 2026-05-27
-Status: Target specification
-Truth Mode: Target
+Status: Partial
+Truth Mode: Current implementation plus target gaps
 
 ## Boundary
 
 The web surface is a Phoenix LiveView application rendered with plain HEEx, function components, and LiveComponents. It owns interaction design and presentation only. It does not own game rules, calculations, persistence policy, or audit semantics.
 
-## Target Routes
+## Current Routes
 
 | Route | LiveView | Purpose |
 | --- | --- | --- |
@@ -34,7 +34,7 @@ The web surface is a Phoenix LiveView application rendered with plain HEEx, func
 - LiveView session data may carry browser preferences, return paths, and anti-forgery/session mechanics supplied by Phoenix.
 - Game access is not an authorization boundary in v1.
 - Each editable player sheet draft has a baseline version. Saving against a stale baseline shows a conflict instead of overwriting newer persisted state.
-- LiveViews should subscribe to game updates where that improves host confidence, but PubSub updates do not replace transactional conflict checks.
+- Dashboard and audit LiveViews subscribe to game updates and refresh after successful game writes. Transactional conflict checks still own correctness.
 
 ## Design Invariants
 
@@ -64,3 +64,9 @@ The web surface is a Phoenix LiveView application rendered with plain HEEx, func
 - Mobile screenshots show usable sheet content and fixed controls without overlap.
 - No view duplicates cashflow calculations.
 - Stale browser tabs cannot silently overwrite a newer sheet save.
+
+## Target Gaps
+
+- Correction UX still needs filters and load-more behavior.
+- Leaderboard filters remain target work.
+- Completion preview and richer recap/export affordances remain partial.

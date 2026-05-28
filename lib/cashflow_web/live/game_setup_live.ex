@@ -7,19 +7,17 @@ defmodule CashflowWeb.GameSetupLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    players =
-      Enum.map(1..6, fn index ->
-        %{"name" => "", "color" => Enum.at(@colors, index - 1), "profession" => ""}
-      end)
-
-    {:ok, assign(socket, title: "", players: players, colors: @colors, error: nil)}
+    {:ok, assign(socket, title: "", players: blank_players(), colors: @colors, error: nil)}
   end
 
   @impl true
   def handle_event("save", %{"game" => params}, socket) do
+    title = Map.get(params, "title", "")
+    players = player_rows_from_params(Map.get(params, "players", %{}))
+
     attrs = %{
-      "title" => params["title"],
-      "players" => Map.get(params, "players", %{}) |> Map.values()
+      "title" => title,
+      "players" => players
     }
 
     case Games.create_game(attrs) do
@@ -27,8 +25,61 @@ defmodule CashflowWeb.GameSetupLive do
         {:noreply, push_navigate(socket, to: ~p"/games/#{game.id}")}
 
       {:error, reason} ->
-        {:noreply, assign(socket, error: human_error(reason))}
+        {:noreply,
+         assign(socket, title: title, players: form_players(players), error: human_error(reason))}
     end
+  end
+
+  defp blank_players do
+    Enum.map(0..5, &blank_player/1)
+  end
+
+  defp blank_player(index) do
+    %{"name" => "", "color" => Enum.at(@colors, index, hd(@colors)), "profession" => ""}
+  end
+
+  defp player_rows_from_params(players) when is_map(players) do
+    players
+    |> Enum.sort_by(fn {key, _player} -> player_row_sort_key(key) end)
+    |> Enum.map(fn {_key, player} -> normalize_player_params(player) end)
+  end
+
+  defp player_rows_from_params(players) when is_list(players) do
+    Enum.map(players, &normalize_player_params/1)
+  end
+
+  defp player_rows_from_params(_players), do: []
+
+  defp player_row_sort_key(key) do
+    case Integer.parse(to_string(key)) do
+      {index, ""} -> {0, index}
+      _ -> {1, to_string(key)}
+    end
+  end
+
+  defp normalize_player_params(player) when is_map(player) do
+    player = Map.new(player, fn {key, value} -> {to_string(key), value || ""} end)
+
+    %{
+      "name" => Map.get(player, "name", ""),
+      "color" => Map.get(player, "color", ""),
+      "profession" => Map.get(player, "profession", "")
+    }
+  end
+
+  defp normalize_player_params(_player), do: %{"name" => "", "color" => "", "profession" => ""}
+
+  defp form_players(players) do
+    players
+    |> Enum.with_index()
+    |> Enum.map(fn {player, index} -> Map.merge(blank_player(index), player) end)
+    |> pad_form_players()
+  end
+
+  defp pad_form_players(players) when length(players) >= 6, do: players
+
+  defp pad_form_players(players) do
+    players ++ Enum.map(length(players)..5, &blank_player/1)
   end
 
   defp human_error(:not_enough_players), do: "Add at least two players."

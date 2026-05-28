@@ -59,6 +59,57 @@ defmodule Cashflow.Sheets do
     ["assets", "savings_cents"]
   ]
 
+  @real_estate_fields ~w(name down_payment_cents cost_cents mortgage_cents income_cents)
+  @business_fields ~w(name down_payment_cents cost_cents liability_cents income_cents)
+  @stock_fields ~w(name shares cost_per_share_cents)
+  @fast_track_investment_fields ~w(name cashflow_cents)
+
+  @static_path_labels %{
+    "schema_version" => "Schema Version",
+    "phase" => "Phase",
+    "meta" => "Profile",
+    "meta.profession" => "Profession",
+    "meta.auditor" => "Auditor",
+    "meta.notes" => "Profile Notes",
+    "income" => "Income",
+    "income.salary_cents" => "Salary",
+    "income.interest_cents" => "Interest",
+    "income.dividends_cents" => "Dividends",
+    "expenses" => "Expenses",
+    "expenses.taxes_cents" => "Taxes",
+    "expenses.mortgage_cents" => "Mortgage Payment",
+    "expenses.school_loan_cents" => "School Loan Payment",
+    "expenses.car_loan_cents" => "Car Loan Payment",
+    "expenses.credit_card_cents" => "Credit Card Payment",
+    "expenses.retail_cents" => "Retail Payment",
+    "expenses.other_cents" => "Other Expenses",
+    "expenses.miscellaneous_cents" => "Miscellaneous",
+    "expenses.children_count" => "Children",
+    "expenses.per_child_cents" => "Per Child Expense",
+    "assets" => "Assets",
+    "assets.savings_cents" => "Savings",
+    "liabilities" => "Liabilities",
+    "liabilities.mortgage_cents" => "Mortgage Liability",
+    "liabilities.school_loan_cents" => "School Loan Liability",
+    "liabilities.car_loan_cents" => "Car Loan Liability",
+    "liabilities.credit_card_cents" => "Credit Card Liability",
+    "liabilities.retail_cents" => "Retail Liability",
+    "liabilities.bank_loan_cents" => "Bank Loan Liability",
+    "investments" => "Investments",
+    "investments.real_estate" => "Real Estate",
+    "investments.businesses" => "Businesses",
+    "investments.stocks" => "Stocks / Mutual Funds / CDs",
+    "fast_track" => "Fast Track",
+    "fast_track.dream" => "Dream",
+    "fast_track.starting_passive_income_cents" => "Starting Passive Income",
+    "fast_track.cashflow_day_income_cents" => "Cashflow Day Income",
+    "fast_track.portfolio_income_cents" => "Portfolio Income",
+    "fast_track.dream_completed" => "Dream Completed",
+    "fast_track.investments" => "Fast Track Investments"
+  }
+
+  @valid_static_paths MapSet.new(Map.keys(@static_path_labels))
+
   def default_sheet(attrs \\ %{}), do: RatRace.new(attrs)
 
   def fast_track_sheet(attrs \\ %{}), do: FastTrack.new(attrs)
@@ -71,7 +122,7 @@ defmodule Cashflow.Sheets do
 
     with :ok <- validate_phase(phase) do
       base = if phase == "fast_track", do: fast_track_sheet(), else: default_sheet()
-      sheet = deep_merge(base, sheet)
+      sheet = deep_merge(base, prune_to_shape(sheet, base))
 
       sheet =
         sheet
@@ -116,13 +167,30 @@ defmodule Cashflow.Sheets do
 
   def valid_path?(path) when is_binary(path) do
     path
-    |> String.split(".")
+    |> split_path()
     |> valid_path?()
   end
 
   def valid_path?(path) when is_list(path) do
-    Enum.all?(path, &is_binary/1)
+    Enum.all?(path, &valid_path_segment?/1) and valid_path_segments?(path)
   end
+
+  def valid_path?(_), do: false
+
+  def field_label(path) when is_binary(path) do
+    path
+    |> split_path()
+    |> field_label()
+  end
+
+  def field_label(path) when is_list(path) do
+    path = Enum.map(path, &to_string/1)
+
+    Map.get(@static_path_labels, Enum.join(path, ".")) || row_field_label(path) ||
+      humanize_path(path)
+  end
+
+  def field_label(_), do: "Unknown Field"
 
   def diff(before_sheet, after_sheet) do
     before_sheet = normalize!(before_sheet)
@@ -172,6 +240,91 @@ defmodule Cashflow.Sheets do
     else
       [%{"path" => Enum.join(path, "."), "before" => before_value, "after" => after_value}]
     end
+  end
+
+  defp valid_path_segments?(path) do
+    MapSet.member?(@valid_static_paths, Enum.join(path, ".")) or valid_row_path?(path)
+  end
+
+  defp valid_row_path?(["investments", "real_estate", index]),
+    do: valid_index?(index, @real_estate_count)
+
+  defp valid_row_path?(["investments", "real_estate", index, field]),
+    do: valid_index?(index, @real_estate_count) and field in @real_estate_fields
+
+  defp valid_row_path?(["investments", "businesses", index]),
+    do: valid_index?(index, @business_count)
+
+  defp valid_row_path?(["investments", "businesses", index, field]),
+    do: valid_index?(index, @business_count) and field in @business_fields
+
+  defp valid_row_path?(["investments", "stocks", index]),
+    do: valid_index?(index, @stock_count)
+
+  defp valid_row_path?(["investments", "stocks", index, field]),
+    do: valid_index?(index, @stock_count) and field in @stock_fields
+
+  defp valid_row_path?(["fast_track", "investments", index]),
+    do: valid_index?(index, @fast_track_investment_count)
+
+  defp valid_row_path?(["fast_track", "investments", index, field]),
+    do:
+      valid_index?(index, @fast_track_investment_count) and field in @fast_track_investment_fields
+
+  defp valid_row_path?(_), do: false
+
+  defp row_field_label(["investments", "real_estate", index]),
+    do: indexed_label("Property", index)
+
+  defp row_field_label(["investments", "real_estate", index, field]),
+    do: indexed_field_label("Property", index, field)
+
+  defp row_field_label(["investments", "businesses", index]),
+    do: indexed_label("Business", index)
+
+  defp row_field_label(["investments", "businesses", index, field]),
+    do: indexed_field_label("Business", index, field)
+
+  defp row_field_label(["investments", "stocks", index]),
+    do: indexed_label("Stock", index)
+
+  defp row_field_label(["investments", "stocks", index, field]),
+    do: indexed_field_label("Stock", index, field)
+
+  defp row_field_label(["fast_track", "investments", index]),
+    do: indexed_label("Fast Track Investment", index)
+
+  defp row_field_label(["fast_track", "investments", index, field]),
+    do: indexed_field_label("Fast Track Investment", index, field)
+
+  defp row_field_label(_), do: nil
+
+  defp indexed_field_label(prefix, index, "name"), do: indexed_label(prefix, index)
+
+  defp indexed_field_label(prefix, index, field),
+    do: "#{indexed_label(prefix, index)} #{humanize_segment(field)}"
+
+  defp indexed_label(prefix, index) do
+    case Integer.parse(index) do
+      {number, ""} -> "#{prefix} #{number + 1}"
+      _ -> nil
+    end
+  end
+
+  defp humanize_path([]), do: "Unknown Field"
+
+  defp humanize_path(path) do
+    path
+    |> List.last()
+    |> humanize_segment()
+  end
+
+  defp humanize_segment(segment) do
+    segment
+    |> String.replace_suffix("_cents", "")
+    |> String.replace("_", " ")
+    |> String.split()
+    |> Enum.map_join(" ", &String.capitalize/1)
   end
 
   defp normalize_money_paths(sheet, paths),
@@ -332,6 +485,30 @@ defmodule Cashflow.Sheets do
 
   defp validate_phase(phase) when phase in @phases, do: :ok
   defp validate_phase(_), do: {:error, :invalid_phase}
+
+  defp valid_path_segment?(segment), do: is_binary(segment) and segment != ""
+
+  defp valid_index?(index, count) do
+    case Integer.parse(index) do
+      {integer, ""} -> integer >= 0 and integer < count
+      _ -> false
+    end
+  end
+
+  defp split_path(path) do
+    String.split(path, ".", trim: true)
+  end
+
+  defp prune_to_shape(%{} = input, %{} = shape) do
+    input
+    |> Map.take(Map.keys(shape))
+    |> Map.new(fn {key, value} ->
+      {key, prune_to_shape(value, Map.get(shape, key))}
+    end)
+  end
+
+  defp prune_to_shape(value, shape) when is_list(shape), do: value
+  defp prune_to_shape(value, _shape), do: value
 
   defp stringify_keys(%{} = map) do
     Map.new(map, fn {key, value} -> {to_string(key), stringify_keys(value)} end)

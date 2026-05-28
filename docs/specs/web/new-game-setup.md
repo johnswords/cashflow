@@ -2,21 +2,25 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | `CashflowWeb.GameSetupLive` |
+| Status | Partial |
+| Implementation | Partial |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/game-domain/versioned-sheet-state.md` |
-| Truth Mode | Target |
+| Truth Mode | Current plus target gaps |
+
+## Current Behavior
+
+- Host chooses a title, 2-6 populated player rows, player names, colors, and optional professions.
+- Names and colors are required for populated rows and unique within the game.
+- Submitting creates the game, players, and default sheet states in one transaction.
+- Successful creation redirects to `/games/{id}`.
 
 ## Target Behavior
 
-- Host chooses a title, player count from 2-6, player names, colors, and optional professions.
-- Names are required and unique within the game.
-- Colors are required and unique within the game.
 - The setup form validates live with Ecto changesets.
-- Submitting creates the game, players, default sheet states, and initial audit seed events in one transaction.
+- Initial audit seed events should be added only if the product still needs explicit setup audit entries.
 
 ## Acceptance
 

@@ -6,6 +6,25 @@ defmodule CashflowWeb.FormatHelpers do
   def money(cents) when is_integer(cents), do: Money.display(cents)
   def money(_), do: "$0"
 
+  def ranked_records(records) do
+    records
+    |> Enum.with_index(1)
+    |> Enum.map_reduce(nil, fn {record, position}, previous ->
+      rank =
+        case previous do
+          %{cashflow_cents: cashflow_cents, rank: rank}
+          when cashflow_cents == record.cashflow_cents ->
+            rank
+
+          _ ->
+            position
+        end
+
+      {{record, rank}, %{cashflow_cents: record.cashflow_cents, rank: rank}}
+    end)
+    |> elem(0)
+  end
+
   def status_label("completed"), do: "Completed"
   def status_label("active"), do: "Active"
   def status_label(status), do: Phoenix.Naming.humanize(status || "")

@@ -6,6 +6,8 @@ defmodule CashflowWeb.GameLive do
 
   @impl true
   def mount(%{"id" => id}, _session, socket) do
+    if connected?(socket), do: Games.subscribe_to_game(id)
+
     {:ok, load(socket, id)}
   end
 
@@ -33,6 +35,11 @@ defmodule CashflowWeb.GameLive do
       {:error, reason} ->
         {:noreply, put_flash(socket, :error, "Could not move player: #{inspect(reason)}")}
     end
+  end
+
+  @impl true
+  def handle_info({:game_updated, game_id}, socket) do
+    {:noreply, load(socket, game_id)}
   end
 
   defp load(socket, id) do

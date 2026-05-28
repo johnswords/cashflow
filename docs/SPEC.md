@@ -1,7 +1,7 @@
 # Cashflow Rewrite Repository Spec
 
 Last Verified: 2026-05-27
-Status: Phoenix implementation contract
+Status: Current Phoenix implementation with target/deferred follow-up
 Truth Mode: Current implementation plus retained target invariants
 
 ## Purpose
@@ -15,6 +15,7 @@ The app preserves the useful product primitives from the retired Vue/Koa prototy
 - The active runtime is Phoenix LiveView with Ecto-backed SQLite local persistence.
 - The current data model includes `games`, `players`, `audit_events`, and `leaderboard_records`.
 - Current sheet modules provide income, expenses, liabilities, assets, investments, meta, and fast track state.
+- Current game statuses are `active` and `completed`; a separate persisted setup status remains target-state only.
 - The retired Vue/Koa runtime is removed from tracked source. Known historical risks are captured in `docs/legacy-app-risk-inventory.md`.
 - `README.md`, `PRD.md`, and `TODO.md` now describe the Phoenix implementation and follow-up work. This spec hierarchy remains the target contract.
 
@@ -80,6 +81,15 @@ Plain LiveView, HEEx, function components, LiveComponents, and Phoenix JS comman
 - Winner selection, completion ceremony, immutable recap, and leaderboard.
 - Local single-machine hosting with durable SQLite storage.
 
+## Current Gaps And Deferred Work
+
+- Postgres compatibility is a target gate before any hosted deployment; the current runtime is SQLite-first and prod config uses `DATABASE_PATH`.
+- Backup export is current at `/backup.json`; validated JSON restore/import is available through `mix cashflow.backup.restore`.
+- Legacy Vue/Koa SQLite import is deferred unless real historical game data must be preserved.
+- Correction writes, origin validation, friendly field labels, and correction origin context exist; filters and load-more behavior remain target polish.
+- Desktop/tablet/phone design review screenshots have been captured for the current hardening pass.
+- PubSub broadcasts refresh active dashboard and audit timeline views after successful game writes.
+
 ## Explicit Non-Goals For V1
 
 - Authentication, authorization, or internet multiplayer.
@@ -97,15 +107,19 @@ Plain LiveView, HEEx, function components, LiveComponents, and Phoenix JS comman
 
 ## Validation Contract
 
-The Phoenix app proves this spec with:
+The implemented Phoenix app is validated with:
 
 - `mise exec -- mix format --check-formatted`
 - `mise exec -- mix test`
-- Ecto migration tests against SQLite by default.
-- A Postgres compatibility check before any hosted deployment path is accepted.
-- LiveView tests for create game, sheet edit, correction, completion, recap, and leaderboard flows.
-- Stale-session/conflict tests for multiple browser tabs editing the same player sheet.
-- Manual design review screenshots for desktop, tablet, and phone viewports before broad use.
+- SQLite migrations run during setup and test database preparation.
+- LiveView tests for lobby, setup, dashboard, sheet edit, audit, completion, backup export, and leaderboard routes.
+- Domain tests for create game, sheet saves, stale draft rejection, correction origin requirements, completion, and completed-game immutability.
+- Backup restore tests cover transactional import, non-empty database refusal, schema-version validation, and restored completed-game immutability.
+- `scripts/check-postgres-compat.sh` is the hosted Postgres compatibility gate when `DATABASE_URL` points at a real Postgres database.
+
+Target validation still required:
+
+- A successful Postgres compatibility check against the actual hosted deployment database before any hosted deployment path is accepted.
 
 ## Rollout Checkpoints
 

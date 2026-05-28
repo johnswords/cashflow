@@ -105,7 +105,7 @@ defmodule CashflowWeb.CoreComponents do
 
     assigns =
       assign_new(assigns, :class, fn ->
-        ["btn", Map.fetch!(variants, assigns[:variant])]
+        ["btn min-h-11", Map.fetch!(variants, assigns[:variant])]
       end)
 
     if rest[:href] || rest[:navigate] || rest[:patch] do
@@ -228,7 +228,7 @@ defmodule CashflowWeb.CoreComponents do
             name={@name}
             value="true"
             checked={@checked}
-            class={@class || "checkbox checkbox-sm"}
+            class={@class || "checkbox"}
             {@rest}
           />{@label}
         </span>
@@ -246,7 +246,10 @@ defmodule CashflowWeb.CoreComponents do
         <select
           id={@id}
           name={@name}
-          class={[@class || "w-full select", @errors != [] && (@error_class || "select-error")]}
+          class={[
+            @class || "w-full min-h-11 select text-base",
+            @errors != [] && (@error_class || "select-error")
+          ]}
           multiple={@multiple}
           {@rest}
         >
@@ -268,7 +271,7 @@ defmodule CashflowWeb.CoreComponents do
           id={@id}
           name={@name}
           class={[
-            @class || "w-full textarea",
+            @class || "w-full min-h-24 textarea text-base",
             @errors != [] && (@error_class || "textarea-error")
           ]}
           {@rest}
@@ -291,7 +294,7 @@ defmodule CashflowWeb.CoreComponents do
           id={@id}
           value={Phoenix.HTML.Form.normalize_value(@type, @value)}
           class={[
-            @class || "w-full input",
+            @class || "w-full min-h-11 input text-base",
             @errors != [] && (@error_class || "input-error")
           ]}
           {@rest}

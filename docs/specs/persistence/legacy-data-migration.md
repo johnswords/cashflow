@@ -3,12 +3,12 @@
 | Field | Value |
 | --- | --- |
 | Status | Deferred |
-| Implementation | No import in rewrite v1 unless real legacy data is provided |
+| Implementation | Deferred |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `ecto-schema-and-migrations.md`, `docs/specs/game-domain/versioned-sheet-state.md` |
-| Truth Mode | Target |
+| Truth Mode | Deferred target |
 
 ## Target Behavior
 

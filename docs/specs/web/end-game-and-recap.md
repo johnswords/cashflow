@@ -2,19 +2,24 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Target |
-| Implementation | `CashflowWeb.GameLive` completion modal and recap mode |
+| Status | Partial |
+| Implementation | Partial |
 | Feature Flag | None |
 | Last Verified | 2026-05-27 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/game-domain/SPEC.md`, `docs/specs/persistence/ecto-schema-and-migrations.md` |
-| Truth Mode | Target |
+| Truth Mode | Current plus target gaps |
+
+## Current Behavior
+
+- Host selects the winner and optional completion comment.
+- Confirming completion marks the game completed and creates leaderboard records in one transaction.
+- Completed games render the dashboard route without edit controls and player sheets in read-only mode.
+- Completion rejects invalid or already completed games through the domain context.
 
 ## Target Behavior
 
-- Host selects the winner and optional completion comment.
 - Completion preview shows immutable snapshot values for the winner and summary values for every player.
-- Confirming completion marks the game completed and creates leaderboard records in one transaction.
 - Recap mode shows read-only final sheets, audit timeline, winner comment, and export options.
 
 ## Acceptance
