@@ -2,10 +2,22 @@
 node_modules
 /dist
 /data
+/_build
+/deps
+
+# Phoenix generated assets and local DB artifacts
+/priv/static/assets
+/priv/static/cache_manifest.json
+*.db
+*.db-*
+*.sqlite
+*.sqlite3
+*.sqlite3-*
 
 # local env files
 .env.local
 .env.*.local
+.env
 
 # Log files
 npm-debug.log*
