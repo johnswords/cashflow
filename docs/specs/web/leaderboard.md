@@ -2,10 +2,10 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Partial |
-| Implementation | Partial |
+| Status | Current |
+| Implementation | Complete for v1 |
 | Feature Flag | None |
-| Last Verified | 2026-05-27 |
+| Last Verified | 2026-05-28 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/game-domain/cashflow-calculations.md`, `docs/specs/persistence/ecto-schema-and-migrations.md` |
 | Truth Mode | Current plus target gaps |
@@ -17,10 +17,7 @@
 - Shows an empty state when no games are completed.
 - Tied cashflow values share rank.
 - Mobile view keeps all columns reachable with horizontal table scroll.
-
-## Target Behavior
-
-- Supports filters for player, timeframe, and phase where data exists.
+- Filters by player, timeframe, and phase where data exists.
 
 ## Acceptance
 

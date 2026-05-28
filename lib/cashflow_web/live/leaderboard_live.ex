@@ -6,7 +6,30 @@ defmodule CashflowWeb.LeaderboardLive do
 
   @impl true
   def mount(_params, _session, socket) do
-    {:ok, assign(socket, records: Games.list_leaderboard_records())}
+    {:ok,
+     socket
+     |> assign(:records, [])
+     |> assign(:leaderboard_filters, %{})
+     |> assign(:filter_options, Games.leaderboard_filter_options())}
+  end
+
+  @impl true
+  def handle_params(params, _url, socket) do
+    filter_options = Games.leaderboard_filter_options()
+    filters = normalize_leaderboard_filters(params, filter_options)
+
+    {:noreply,
+     socket
+     |> assign(:filter_options, filter_options)
+     |> assign(:leaderboard_filters, filters)
+     |> assign(:records, Games.list_leaderboard_records(filters))}
+  end
+
+  @impl true
+  def handle_event("filter", %{"filters" => params}, socket) do
+    query = leaderboard_query(params, socket.assigns.filter_options)
+
+    {:noreply, push_patch(socket, to: ~p"/leaderboard?#{query}")}
   end
 
   @impl true
@@ -21,6 +44,51 @@ defmodule CashflowWeb.LeaderboardLive do
           </div>
           <.button navigate={~p"/"}>Lobby</.button>
         </header>
+
+        <section class="rounded-lg bg-base-100 p-4 shadow-sm">
+          <.form
+            for={%{}}
+            as={:filters}
+            phx-change="filter"
+            phx-submit="filter"
+            class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_minmax(0,1fr)_auto]"
+          >
+            <.input
+              type="select"
+              name="filters[player_name]"
+              label="Player"
+              prompt="All players"
+              value={@leaderboard_filters[:player_name] || ""}
+              options={Enum.map(@filter_options.player_names, &{&1, &1})}
+            />
+            <.input
+              type="select"
+              name="filters[phase]"
+              label="Phase"
+              prompt="All phases"
+              value={@leaderboard_filters[:phase] || ""}
+              options={Enum.map(@filter_options.phases, &{phase_label(&1), &1})}
+            />
+            <.input
+              type="select"
+              name="filters[timeframe]"
+              label="Timeframe"
+              value={@leaderboard_filters[:timeframe] || "all"}
+              options={[
+                {"All time", "all"},
+                {"Last 7 days", "7d"},
+                {"Last 30 days", "30d"},
+                {"Last 90 days", "90d"}
+              ]}
+            />
+            <div class="flex items-end">
+              <.button patch={~p"/leaderboard"}>Clear</.button>
+            </div>
+          </.form>
+          <p class="text-sm text-base-content/70">
+            Showing {length(@records)} completion snapshots
+          </p>
+        </section>
 
         <div class="rounded-lg bg-base-100 shadow-sm">
           <div class="overflow-x-auto">
@@ -58,5 +126,38 @@ defmodule CashflowWeb.LeaderboardLive do
       </section>
     </main>
     """
+  end
+
+  defp leaderboard_query(params, options) do
+    params
+    |> normalize_leaderboard_filters(options)
+    |> Enum.reject(fn {_key, value} -> is_nil(value) end)
+    |> Map.new()
+  end
+
+  defp normalize_leaderboard_filters(params, options) do
+    player_name = params["player_name"] || params[:player_name]
+    phase = params["phase"] || params[:phase]
+    timeframe = params["timeframe"] || params[:timeframe]
+
+    %{
+      player_name: valid_player_name(player_name, options),
+      phase: valid_phase(phase, options),
+      timeframe: valid_timeframe(timeframe)
+    }
+  end
+
+  defp valid_player_name(player_name, options) do
+    if player_name in options.player_names, do: player_name
+  end
+
+  defp valid_phase(phase, options) do
+    if phase in options.phases, do: phase
+  end
+
+  defp valid_timeframe(timeframe) when timeframe in ["", nil, "all"], do: nil
+
+  defp valid_timeframe(timeframe) do
+    if timeframe in Games.leaderboard_timeframes(), do: timeframe
   end
 end

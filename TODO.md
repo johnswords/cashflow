@@ -17,9 +17,10 @@
 - [x] Completed-game immutability tests
 - [x] Strict audit field-path validation against the versioned sheet schema
 - [x] Postgres compatibility gate script
+- [x] Run Postgres compatibility gate against a real local Postgres database
 - [ ] Explicit setup lifecycle state if setup needs to be persisted separately from active play
 - [ ] Fast Track win-state enforcement before completion if required by final v1 rules
-- [ ] Run Postgres compatibility gate against a real Postgres database before hosted deployment
+- [ ] Run Postgres compatibility gate against the hosted Postgres database before hosted deployment
 
 ## LiveView UX
 
@@ -33,10 +34,10 @@
 - [x] Mobile touch target sizing for core controls
 - [x] Leaderboard shared-rank tie rendering and mobile horizontal scroll
 - [x] PubSub dashboard/audit refresh after successful writes
-- [ ] Correction filters and load-more behavior
-- [ ] Visible lobby backup/export affordance
-- [ ] Leaderboard filters
-- [ ] Completion preview and richer recap/export affordances
+- [x] Correction filters and load-more behavior
+- [x] Visible lobby backup/export affordance
+- [x] Leaderboard filters
+- [x] Completion preview and richer recap/export affordances
 - [x] Desktop/tablet/phone design review screenshots
 
 ## Operations
@@ -45,5 +46,5 @@
 - [x] JSON backup export at `/backup.json`
 - [x] Restore/import command for backup JSON
 - [x] Seed/demo data
-- [ ] Health endpoint for runtime checks
+- [x] Health endpoint for runtime checks
 - [ ] Legacy SQLite import only if real historical data must be preserved

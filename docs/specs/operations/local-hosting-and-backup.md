@@ -5,7 +5,7 @@
 | Status | Current |
 | Implementation | Complete for local v1 |
 | Feature Flag | None |
-| Last Verified | 2026-05-27 |
+| Last Verified | 2026-05-28 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/persistence/SPEC.md` |
 | Truth Mode | Current plus target gaps |
@@ -17,7 +17,9 @@
 - `mise exec -- mix phx.server` starts the app for local play.
 - SQLite data path is explicit and ignored by git.
 - Backup export includes games, players, audit events, leaderboard records, schema version, and export timestamp.
+- Backup export is reachable from the lobby/game UI and `/backup.json`.
 - Backup restore validates schema version, required collections, UUIDs, datetimes, relationships, completed-game snapshots, and audit field paths before writing.
+- Health/status JSON is reachable at `/healthz` and `/status.json`.
 - Restore refuses to import into a non-empty database unless `--replace` is supplied.
 - Demo seed data creates a realistic active game and completed game.
 

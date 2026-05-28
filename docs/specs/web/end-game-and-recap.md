@@ -2,10 +2,10 @@
 
 | Field | Value |
 | --- | --- |
-| Status | Partial |
-| Implementation | Partial |
+| Status | Current |
+| Implementation | Complete for v1 |
 | Feature Flag | None |
-| Last Verified | 2026-05-27 |
+| Last Verified | 2026-05-28 |
 | Linear Issue | TBD |
 | Depends On | `docs/specs/game-domain/SPEC.md`, `docs/specs/persistence/ecto-schema-and-migrations.md` |
 | Truth Mode | Current plus target gaps |
@@ -15,12 +15,9 @@
 - Host selects the winner and optional completion comment.
 - Confirming completion marks the game completed and creates leaderboard records in one transaction.
 - Completed games render the dashboard route without edit controls and player sheets in read-only mode.
+- Completion preview shows snapshot values for every player and highlights the selected winner.
+- Completed recap shows immutable leaderboard snapshots, audit navigation, winner comment, and backup export.
 - Completion rejects invalid or already completed games through the domain context.
-
-## Target Behavior
-
-- Completion preview shows immutable snapshot values for the winner and summary values for every player.
-- Recap mode shows read-only final sheets, audit timeline, winner comment, and export options.
 
 ## Acceptance
 

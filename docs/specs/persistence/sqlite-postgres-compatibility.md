@@ -5,7 +5,7 @@
 | Status | Partial |
 | Implementation | Partial |
 | Feature Flag | None |
-| Last Verified | 2026-05-27 |
+| Last Verified | 2026-05-28 |
 | Linear Issue | TBD |
 | Depends On | `ecto-schema-and-migrations.md` |
 | Truth Mode | Current SQLite behavior plus target Postgres gate |
@@ -18,6 +18,7 @@
 - Backup/export format is independent of the physical adapter.
 - `scripts/check-postgres-compat.sh` creates the equivalent logical Postgres schema in a temporary schema, inserts representative rows, and rolls back.
 - The gate fails unless `DATABASE_URL` is provided, except when `CASHFLOW_SKIP_POSTGRES_COMPAT=1` explicitly skips it.
+- The gate has been run successfully against local Homebrew Postgres with `DATABASE_URL=postgres:///postgres`.
 
 ## Target Behavior
 

@@ -10,11 +10,13 @@ Phoenix LiveView app for Cashflow game-night sheets. The active runtime is an El
 - Edit a player sheet with draft state, diff review, save/cancel, stale-save protection, and completed-game read-only enforcement.
 - Capture audit events for turns, corrections, phase transitions, and completion.
 - Complete games with immutable leaderboard snapshots.
-- Browse lobby, dashboard, sheet, audit, leaderboard, and JSON backup/export routes.
+- Browse lobby, dashboard, sheet, audit, leaderboard, health, and JSON backup/export routes.
+- Filter audit events and leaderboard snapshots without leaving the current route.
+- Preview completion snapshots before locking a game and review completed-game recap snapshots afterward.
 - Restore a validated JSON backup into a fresh or replaced local database.
 - Seed demo active/completed games for local review.
 
-Not yet implemented: health endpoint, correction filtering/load-more, and real Postgres gate execution against hosted infrastructure.
+Not yet implemented: hosted Postgres deployment wiring and legacy SQLite import. The Postgres compatibility gate can be run against a real Postgres `DATABASE_URL`; hosted infrastructure must still supply its deployment database before launch.
 
 ## Prerequisites
 
@@ -50,6 +52,15 @@ Game data lives in `data/cashflow_dev.sqlite3`, which is ignored.
 | `mise exec -- mix cashflow.backup.restore path/to/backup.json [--replace]` | Restore a validated JSON backup |
 | `bash scripts/check-postgres-compat.sh` | Run the Postgres compatibility gate when `DATABASE_URL` is set |
 | `bash scripts/check-specs.sh` | Validate the SDD spec hierarchy |
+
+## Health
+
+```bash
+curl http://localhost:4000/healthz
+curl http://localhost:4000/status.json
+```
+
+Both endpoints return JSON app/database status.
 
 ## Architecture
 

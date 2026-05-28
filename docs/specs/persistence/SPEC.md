@@ -1,6 +1,6 @@
 # Persistence Surface Spec
 
-Last Verified: 2026-05-27
+Last Verified: 2026-05-28
 Status: Partial
 Truth Mode: Current implementation plus target/deferred gaps
 
@@ -36,10 +36,11 @@ The persistence surface owns Ecto schemas, migrations, database constraints, ada
 - Stale writes are rejected by context logic and covered by tests.
 - Backup restore/import validates backup shape and relationships before writing.
 - The Postgres compatibility gate script exists at `scripts/check-postgres-compat.sh`.
+- The Postgres compatibility gate has been run against a local Homebrew Postgres database.
 
 ## Target And Deferred Gaps
 
-- The Postgres compatibility script must be run against a real Postgres database before hosted deployment.
+- The Postgres compatibility script must be run against the hosted Postgres database before hosted deployment.
 - `sheet_versions` and `backups` tables remain optional target tables, not current schema.
 - Legacy data import is deferred unless real historical data must be preserved.
 

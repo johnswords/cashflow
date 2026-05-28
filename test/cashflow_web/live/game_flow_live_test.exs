@@ -494,6 +494,94 @@ defmodule CashflowWeb.GameFlowLiveTest do
     assert render(audit) =~ "Salary"
   end
 
+  test "audit timeline filters and loads more events", %{conn: conn} do
+    {:ok, game} =
+      Games.create_game(%{
+        title: "Audit Filter Game",
+        players: [
+          %{"name" => "Henry", "color" => "blue"},
+          %{"name" => "Ashley", "color" => "green"}
+        ]
+      })
+
+    [first_player, second_player] = game.players
+
+    Enum.reduce(1..11, first_player, fn index, player ->
+      sheet = put_in(player.sheet_state, ["income", "salary_cents"], 100_000 + index)
+
+      {:ok, %{player: updated_player}} =
+        Games.save_player_sheet(game.id, player.id, sheet,
+          baseline_lock_version: player.lock_version
+        )
+
+      updated_player
+    end)
+
+    second_sheet = put_in(second_player.sheet_state, ["income", "salary_cents"], 200_000)
+
+    {:ok, _} =
+      Games.save_player_sheet(game.id, second_player.id, second_sheet,
+        baseline_lock_version: second_player.lock_version
+      )
+
+    {:ok, view, html} = live(conn, ~p"/games/#{game.id}/audit")
+
+    assert html =~ "Showing 10 of 12 events"
+    assert html =~ "Load More (10 of 12)"
+
+    html = render_click(view, "load_more")
+
+    assert html =~ "Showing 12 of 12 events"
+    refute html =~ "Load More ("
+
+    {:ok, _view, filtered_html} =
+      live(conn, ~p"/games/#{game.id}/audit?player_id=#{second_player.id}")
+
+    assert filtered_html =~ "Showing 1 of 1 events"
+
+    {:ok, _view, empty_filter_html} =
+      live(conn, ~p"/games/#{game.id}/audit?event_type=correction")
+
+    assert empty_filter_html =~ "Showing 0 of 0 events"
+    assert empty_filter_html =~ "No audit events yet."
+  end
+
+  test "completion preview becomes a completed recap", %{conn: conn} do
+    {:ok, game} =
+      Games.create_game(%{
+        title: "Recap Live Game",
+        players: [
+          %{"name" => "Henry", "color" => "blue"},
+          %{"name" => "Ashley", "color" => "green"}
+        ]
+      })
+
+    winner = hd(game.players)
+    {:ok, view, html} = live(conn, ~p"/games/#{game.id}")
+
+    assert html =~ "Complete Game"
+    assert html =~ "Select winner"
+
+    html =
+      render_change(view, "preview_completion", %{
+        "game" => %{"winner_player_id" => winner.id, "winner_comment" => "Strong finish"}
+      })
+
+    assert html =~ "Winner"
+    assert html =~ "Strong finish"
+
+    html =
+      render_submit(view, "complete", %{
+        "game" => %{"winner_player_id" => winner.id, "winner_comment" => "Strong finish"}
+      })
+
+    assert html =~ "Completed Recap"
+    assert html =~ "Henry won"
+    assert html =~ "Strong finish"
+    assert html =~ "Export Backup"
+    refute html =~ "Select winner"
+  end
+
   test "new game setup route renders", %{conn: conn} do
     {:ok, _view, html} = live(conn, ~p"/games/new")
 
@@ -571,5 +659,42 @@ defmodule CashflowWeb.GameFlowLiveTest do
       |> List.flatten()
 
     assert Enum.take(ranks, 2) == ["1", "1"]
+  end
+
+  test "leaderboard filters by player, phase, and timeframe", %{conn: conn} do
+    {:ok, first_game} =
+      Games.create_game(%{
+        title: "Leaderboard Filter One",
+        players: [
+          %{"name" => "Henry", "color" => "blue"},
+          %{"name" => "Ashley", "color" => "green"}
+        ]
+      })
+
+    {:ok, second_game} =
+      Games.create_game(%{
+        title: "Leaderboard Filter Two",
+        players: [
+          %{"name" => "Taylor", "color" => "blue"},
+          %{"name" => "Morgan", "color" => "green"}
+        ]
+      })
+
+    {:ok, _} =
+      Games.complete_game(first_game.id, %{"winner_player_id" => hd(first_game.players).id})
+
+    {:ok, _} =
+      Games.complete_game(second_game.id, %{"winner_player_id" => hd(second_game.players).id})
+
+    {:ok, _view, player_html} = live(conn, ~p"/leaderboard?player_name=Taylor")
+    assert player_html =~ "Showing 1 completion snapshots"
+    assert player_html =~ "Taylor"
+
+    {:ok, _view, timeframe_html} = live(conn, ~p"/leaderboard?timeframe=90d")
+    assert timeframe_html =~ "Showing 4 completion snapshots"
+
+    {:ok, _view, phase_html} = live(conn, ~p"/leaderboard?phase=rat_race")
+    assert phase_html =~ "Showing 4 completion snapshots"
+    assert phase_html =~ ~s(<option selected="" value="rat_race">Rat Race</option>)
   end
 end

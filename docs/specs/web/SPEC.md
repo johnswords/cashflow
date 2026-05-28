@@ -1,6 +1,6 @@
 # Web UI Surface Spec
 
-Last Verified: 2026-05-27
+Last Verified: 2026-05-28
 Status: Partial
 Truth Mode: Current implementation plus target gaps
 
@@ -67,6 +67,4 @@ The web surface is a Phoenix LiveView application rendered with plain HEEx, func
 
 ## Target Gaps
 
-- Correction UX still needs filters and load-more behavior.
-- Leaderboard filters remain target work.
-- Completion preview and richer recap/export affordances remain partial.
+- Optional UI polish remains, but correction filters/load-more, leaderboard filters, completion preview, and completed recap/export affordances are implemented.

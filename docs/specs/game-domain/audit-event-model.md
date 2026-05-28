@@ -5,7 +5,7 @@
 | Status | Partial |
 | Implementation | Partial |
 | Feature Flag | None |
-| Last Verified | 2026-05-27 |
+| Last Verified | 2026-05-28 |
 | Linear Issue | TBD |
 | Depends On | `versioned-sheet-state.md`, `docs/specs/persistence/ecto-schema-and-migrations.md` |
 | Truth Mode | Current plus target gaps |
@@ -20,6 +20,7 @@
 - Saving a turn or correction without changes is rejected as `:no_changes`.
 - Audit event field paths are validated against the versioned sheet schema, with explicit allowances for game-level completion fields.
 - Player-sheet review and audit timeline views display friendly field labels while preserving raw paths in title/secondary text.
+- Audit event queries support player and event-type filters plus bounded pagination for the web timeline.
 
 ## Problem
 
@@ -28,7 +29,6 @@ The retired audit flow captured useful diffs but stored arbitrary snapshots and 
 ## Target Gaps
 
 - Full snapshots are stored as recovery payloads today; future recovery/import tooling should continue validating them against sheet versions.
-- Audit filters and load-more behavior remain web-surface polish.
 
 ## Acceptance
 

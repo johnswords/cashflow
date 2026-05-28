@@ -6,5 +6,7 @@ defmodule CashflowWeb.LobbyLiveTest do
 
     assert html =~ "Game Control Room"
     assert html =~ "New Game"
+    assert html =~ "Export Backup"
+    assert html =~ ~s(href="/backup.json")
   end
 end

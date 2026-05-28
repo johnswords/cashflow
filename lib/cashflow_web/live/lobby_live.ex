@@ -26,7 +26,10 @@ defmodule CashflowWeb.LobbyLive do
             <p class="text-sm font-semibold uppercase tracking-wide text-primary">Cashflow Live</p>
             <h1 class="text-3xl font-bold sm:text-4xl">Game Control Room</h1>
           </div>
-          <.button navigate={~p"/games/new"}>New Game</.button>
+          <div class="flex flex-wrap gap-2">
+            <.button href={~p"/backup.json"} download="cashflow-backup.json">Export Backup</.button>
+            <.button navigate={~p"/games/new"}>New Game</.button>
+          </div>
         </header>
 
         <section class="grid gap-4 lg:grid-cols-[1.4fr_1fr]">

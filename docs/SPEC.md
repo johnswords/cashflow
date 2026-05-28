@@ -1,6 +1,6 @@
 # Cashflow Rewrite Repository Spec
 
-Last Verified: 2026-05-27
+Last Verified: 2026-05-28
 Status: Current Phoenix implementation with target/deferred follow-up
 Truth Mode: Current implementation plus retained target invariants
 
@@ -85,8 +85,10 @@ Plain LiveView, HEEx, function components, LiveComponents, and Phoenix JS comman
 
 - Postgres compatibility is a target gate before any hosted deployment; the current runtime is SQLite-first and prod config uses `DATABASE_PATH`.
 - Backup export is current at `/backup.json`; validated JSON restore/import is available through `mix cashflow.backup.restore`.
+- Health/status JSON is available at `/healthz` and `/status.json`.
 - Legacy Vue/Koa SQLite import is deferred unless real historical game data must be preserved.
-- Correction writes, origin validation, friendly field labels, and correction origin context exist; filters and load-more behavior remain target polish.
+- Correction writes, origin validation, friendly field labels, correction origin context, filters, and load-more behavior exist.
+- Leaderboard filters and completed-game recap/export affordances exist.
 - Desktop/tablet/phone design review screenshots have been captured for the current hardening pass.
 - PubSub broadcasts refresh active dashboard and audit timeline views after successful game writes.
 
@@ -115,11 +117,11 @@ The implemented Phoenix app is validated with:
 - LiveView tests for lobby, setup, dashboard, sheet edit, audit, completion, backup export, and leaderboard routes.
 - Domain tests for create game, sheet saves, stale draft rejection, correction origin requirements, completion, and completed-game immutability.
 - Backup restore tests cover transactional import, non-empty database refusal, schema-version validation, and restored completed-game immutability.
-- `scripts/check-postgres-compat.sh` is the hosted Postgres compatibility gate when `DATABASE_URL` points at a real Postgres database.
+- `scripts/check-postgres-compat.sh` is the Postgres compatibility gate when `DATABASE_URL` points at a real Postgres database.
 
 Target validation still required:
 
-- A successful Postgres compatibility check against the actual hosted deployment database before any hosted deployment path is accepted.
+- A successful Postgres compatibility check against the actual hosted deployment database before any hosted deployment path is accepted. A local Homebrew Postgres run is useful evidence, but not a substitute for the hosted database gate.
 
 ## Rollout Checkpoints
 

@@ -15,6 +15,13 @@ defmodule CashflowWeb.Router do
   end
 
   scope "/", CashflowWeb do
+    pipe_through :api
+
+    get "/healthz", HealthController, :show
+    get "/status.json", HealthController, :show
+  end
+
+  scope "/", CashflowWeb do
     pipe_through :browser
 
     live "/", LobbyLive

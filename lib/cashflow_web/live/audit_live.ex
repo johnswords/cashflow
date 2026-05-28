@@ -3,6 +3,8 @@ defmodule CashflowWeb.AuditLive do
 
   alias Cashflow.{Games, Sheets}
 
+  @audit_page_size 10
+
   @impl true
   def mount(%{"id" => id}, _session, socket) do
     if connected?(socket), do: Games.subscribe_to_game(id)
@@ -12,7 +14,35 @@ defmodule CashflowWeb.AuditLive do
     {:ok,
      socket
      |> assign(:game, game)
-     |> assign(:events, Games.list_audit_events(id))}
+     |> assign(:audit_filters, %{})
+     |> assign(:audit_limit, @audit_page_size)
+     |> assign(:events, [])
+     |> assign(:events_total_count, 0)}
+  end
+
+  @impl true
+  def handle_params(params, _url, socket) do
+    filters = normalize_audit_filters(params, socket.assigns.game)
+
+    {:noreply,
+     socket
+     |> assign(:audit_filters, filters)
+     |> assign(:audit_limit, @audit_page_size)
+     |> load_events()}
+  end
+
+  @impl true
+  def handle_event("filter", %{"filters" => params}, socket) do
+    query = audit_query(params, socket.assigns.game)
+
+    {:noreply, push_patch(socket, to: ~p"/games/#{socket.assigns.game.id}/audit?#{query}")}
+  end
+
+  def handle_event("load_more", _params, socket) do
+    {:noreply,
+     socket
+     |> assign(:audit_limit, socket.assigns.audit_limit + @audit_page_size)
+     |> load_events()}
   end
 
   @impl true
@@ -20,7 +50,7 @@ defmodule CashflowWeb.AuditLive do
     {:noreply,
      socket
      |> assign(:game, Games.get_game!(game_id))
-     |> assign(:events, Games.list_audit_events(game_id))}
+     |> load_events()}
   end
 
   @impl true
@@ -35,6 +65,39 @@ defmodule CashflowWeb.AuditLive do
           </div>
           <.button navigate={~p"/games/#{@game.id}"}>Dashboard</.button>
         </header>
+
+        <section class="rounded-lg bg-base-100 p-4 shadow-sm">
+          <.form
+            for={%{}}
+            as={:filters}
+            phx-change="filter"
+            phx-submit="filter"
+            class="grid gap-3 md:grid-cols-[minmax(0,1fr)_minmax(0,1fr)_auto]"
+          >
+            <.input
+              type="select"
+              name="filters[player_id]"
+              label="Player"
+              prompt="All players"
+              value={@audit_filters[:player_id] || ""}
+              options={Enum.map(@game.players, &{&1.name, &1.id})}
+            />
+            <.input
+              type="select"
+              name="filters[event_type]"
+              label="Event"
+              prompt="All events"
+              value={@audit_filters[:event_type] || ""}
+              options={Enum.map(Games.audit_event_types(), &{event_label(&1), &1})}
+            />
+            <div class="flex items-end">
+              <.button patch={~p"/games/#{@game.id}/audit"}>Clear</.button>
+            </div>
+          </.form>
+          <p class="text-sm text-base-content/70">
+            Showing {length(@events)} of {@events_total_count} events
+          </p>
+        </section>
 
         <ol class="grid gap-3">
           <li :for={event <- @events} class="rounded-lg bg-base-100 p-4 shadow-sm">
@@ -80,9 +143,53 @@ defmodule CashflowWeb.AuditLive do
             No audit events yet.
           </li>
         </ol>
+
+        <div :if={length(@events) < @events_total_count} class="flex justify-center">
+          <.button type="button" phx-click="load_more">
+            Load More ({length(@events)} of {@events_total_count})
+          </.button>
+        </div>
       </section>
     </main>
     """
+  end
+
+  defp load_events(socket) do
+    game_id = socket.assigns.game.id
+    filters = socket.assigns.audit_filters
+    limit = socket.assigns.audit_limit
+    opts = Map.put(filters, :limit, limit)
+
+    socket
+    |> assign(:events, Games.list_audit_events(game_id, opts))
+    |> assign(:events_total_count, Games.count_audit_events(game_id, filters))
+  end
+
+  defp audit_query(params, game) do
+    params
+    |> normalize_audit_filters(game)
+    |> Enum.reject(fn {_key, value} -> is_nil(value) end)
+    |> Map.new()
+  end
+
+  defp normalize_audit_filters(params, game) do
+    player_id = params["player_id"] || params[:player_id]
+    event_type = params["event_type"] || params[:event_type]
+
+    %{
+      player_id: valid_player_id(player_id, game),
+      event_type: valid_event_type(event_type)
+    }
+  end
+
+  defp valid_player_id(player_id, game) do
+    if Enum.any?(game.players, &(&1.id == player_id)), do: player_id
+  end
+
+  defp valid_event_type(event_type) when event_type in ["", nil], do: nil
+
+  defp valid_event_type(event_type) do
+    if event_type in Games.audit_event_types(), do: event_type
   end
 
   defp event_label(event_type), do: Phoenix.Naming.humanize(event_type || "")

@@ -9,6 +9,10 @@ defmodule Cashflow.Games do
   alias Cashflow.{Calculations, Repo, Sheets}
   alias Cashflow.Games.{AuditEvent, Game, LeaderboardRecord, Player}
 
+  @audit_event_types ~w(turn correction phase_transition completion)
+  @leaderboard_phases ~w(rat_race fast_track)
+  @leaderboard_timeframes %{"7d" => 7, "30d" => 30, "90d" => 90}
+
   def subscribe_to_game(game_id) do
     Phoenix.PubSub.subscribe(Cashflow.PubSub, game_topic(game_id))
   end
@@ -248,12 +252,34 @@ defmodule Cashflow.Games do
     broadcast_game_update(result, game_id)
   end
 
-  def list_audit_events(game_id) do
+  def audit_event_types, do: @audit_event_types
+
+  def leaderboard_phases, do: @leaderboard_phases
+
+  def leaderboard_timeframes, do: Map.keys(@leaderboard_timeframes)
+
+  def list_audit_events(game_id, opts \\ []) do
+    opts = opts_map(opts)
+    limit = integer_option(opts, :limit, 10, 100)
+
     AuditEvent
     |> where([e], e.game_id == ^game_id)
+    |> filter_binary_id(:player_id, opts[:player_id])
+    |> filter_audit_event_type(opts[:event_type])
     |> order_by([e], desc: e.inserted_at)
+    |> limit(^limit)
     |> preload(:player)
     |> Repo.all()
+  end
+
+  def count_audit_events(game_id, opts \\ []) do
+    opts = opts_map(opts)
+
+    AuditEvent
+    |> where([e], e.game_id == ^game_id)
+    |> filter_binary_id(:player_id, opts[:player_id])
+    |> filter_audit_event_type(opts[:event_type])
+    |> Repo.aggregate(:count, :id)
   end
 
   def get_audit_event!(game_id, event_id) do
@@ -263,10 +289,33 @@ defmodule Cashflow.Games do
     |> Repo.one!()
   end
 
-  def list_leaderboard_records do
+  def list_leaderboard_records(opts \\ []) do
+    opts = opts_map(opts)
+
     LeaderboardRecord
+    |> filter_binary_id(:game_id, opts[:game_id])
+    |> filter_leaderboard_player(opts[:player_name])
+    |> filter_leaderboard_phase(opts[:phase])
+    |> filter_leaderboard_timeframe(opts[:timeframe])
     |> order_by([r], desc: r.cashflow_cents, asc: r.completed_at)
     |> Repo.all()
+  end
+
+  def leaderboard_filter_options do
+    %{
+      player_names:
+        LeaderboardRecord
+        |> select([r], r.player_name)
+        |> distinct(true)
+        |> order_by([r], asc: r.player_name)
+        |> Repo.all(),
+      phases:
+        LeaderboardRecord
+        |> select([r], r.phase)
+        |> distinct(true)
+        |> order_by([r], asc: r.phase)
+        |> Repo.all()
+    }
   end
 
   def export_data do
@@ -332,6 +381,100 @@ defmodule Cashflow.Games do
 
   defp unique_by?(items, fun),
     do: items |> Enum.map(fun) |> Enum.uniq() |> length() == length(items)
+
+  defp opts_map(opts) when is_map(opts) do
+    Map.new(opts, fn {key, value} -> {normalize_opt_key(key), blank_to_nil(value)} end)
+  end
+
+  defp opts_map(opts) when is_list(opts) do
+    opts
+    |> Map.new()
+    |> opts_map()
+  end
+
+  defp opts_map(_), do: %{}
+
+  defp normalize_opt_key(key) when is_atom(key), do: key
+  defp normalize_opt_key("event_type"), do: :event_type
+  defp normalize_opt_key("game_id"), do: :game_id
+  defp normalize_opt_key("limit"), do: :limit
+  defp normalize_opt_key("phase"), do: :phase
+  defp normalize_opt_key("player_id"), do: :player_id
+  defp normalize_opt_key("player_name"), do: :player_name
+  defp normalize_opt_key("timeframe"), do: :timeframe
+  defp normalize_opt_key(key) when is_binary(key), do: key
+  defp normalize_opt_key(key), do: key
+
+  defp blank_to_nil(value) when is_binary(value) do
+    case String.trim(value) do
+      "" -> nil
+      value -> value
+    end
+  end
+
+  defp blank_to_nil(value), do: value
+
+  defp integer_option(opts, key, default, max) do
+    value = Map.get(opts, key)
+
+    case value do
+      integer when is_integer(integer) ->
+        integer
+
+      string when is_binary(string) ->
+        case Integer.parse(string) do
+          {integer, ""} -> integer
+          _ -> default
+        end
+
+      _ ->
+        default
+    end
+    |> min(max)
+    |> max(1)
+  end
+
+  defp filter_binary_id(query, _field, nil), do: query
+
+  defp filter_binary_id(query, field, value) do
+    case Ecto.UUID.cast(value) do
+      {:ok, uuid} -> where(query, [record], field(record, ^field) == ^uuid)
+      :error -> where(query, false)
+    end
+  end
+
+  defp filter_audit_event_type(query, nil), do: query
+
+  defp filter_audit_event_type(query, event_type) when event_type in @audit_event_types,
+    do: where(query, [e], e.event_type == ^event_type)
+
+  defp filter_audit_event_type(query, _event_type), do: where(query, false)
+
+  defp filter_leaderboard_player(query, nil), do: query
+
+  defp filter_leaderboard_player(query, player_name),
+    do: where(query, [r], r.player_name == ^player_name)
+
+  defp filter_leaderboard_phase(query, nil), do: query
+
+  defp filter_leaderboard_phase(query, phase) when phase in @leaderboard_phases,
+    do: where(query, [r], r.phase == ^phase)
+
+  defp filter_leaderboard_phase(query, _phase), do: where(query, false)
+
+  defp filter_leaderboard_timeframe(query, nil), do: query
+  defp filter_leaderboard_timeframe(query, "all"), do: query
+
+  defp filter_leaderboard_timeframe(query, timeframe) do
+    case Map.fetch(@leaderboard_timeframes, timeframe) do
+      {:ok, days} ->
+        cutoff = DateTime.utc_now(:second) |> DateTime.add(-days, :day)
+        where(query, [r], r.completed_at >= ^cutoff)
+
+      :error ->
+        where(query, false)
+    end
+  end
 
   defp collect_results(results) do
     Enum.reduce_while(results, {:ok, []}, fn
