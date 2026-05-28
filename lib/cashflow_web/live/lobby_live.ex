@@ -71,12 +71,12 @@ defmodule CashflowWeb.LobbyLive do
                 <span>{rank}. {record.player_name}</span>
                 <strong>{money(record.cashflow_cents)}</strong>
               </li>
-              <p
+              <li
                 :if={@leaderboard_records == []}
                 class="rounded border border-dashed border-base-300 p-6 text-center text-base-content/70"
               >
                 Complete a game to fill the board.
-              </p>
+              </li>
             </ol>
           </div>
         </section>

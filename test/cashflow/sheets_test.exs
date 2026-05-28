@@ -65,7 +65,8 @@ defmodule Cashflow.SheetsTest do
     refute Sheets.valid_path?("bogus")
 
     assert Sheets.field_label("income.salary_cents") == "Salary"
-    assert Sheets.field_label("investments.real_estate.0.income_cents") == "Property 1 Income"
+    assert Sheets.field_label("investments.real_estate.0.income_cents") == "Property 1 Cashflow"
+    assert Sheets.field_label("investments.businesses.0.income_cents") == "Business 1 Cashflow"
 
     assert Sheets.field_label("fast_track.investments.11.cashflow_cents") ==
              "Fast Track Investment 12 Cashflow"

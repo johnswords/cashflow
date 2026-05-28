@@ -73,12 +73,12 @@ defmodule CashflowWeb.AuditLive do
               </span>
             </div>
           </li>
-          <p
+          <li
             :if={@events == []}
             class="rounded border border-dashed border-base-300 bg-base-100 p-6 text-center text-base-content/70"
           >
             No audit events yet.
-          </p>
+          </li>
         </ol>
       </section>
     </main>

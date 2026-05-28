@@ -301,6 +301,10 @@ defmodule Cashflow.Sheets do
 
   defp indexed_field_label(prefix, index, "name"), do: indexed_label(prefix, index)
 
+  defp indexed_field_label(prefix, index, "income_cents")
+       when prefix in ["Property", "Business"],
+       do: "#{indexed_label(prefix, index)} Cashflow"
+
   defp indexed_field_label(prefix, index, field),
     do: "#{indexed_label(prefix, index)} #{humanize_segment(field)}"
 
