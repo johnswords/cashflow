@@ -1,130 +1,119 @@
-# Cashflow Balance Sheet – Multiplayer Arcade
+# Cashflow Live
 
-A retro-inspired control room for Rich Dad's Cashflow board game. Spin up Nintendo-style game sessions, manage 2–6 players, capture every sheet adjustment with an audit trail, and crown winners with persistent leaderboards. The single-player calculator is still here—but now it lives inside a full multiplayer flow backed by SQLite.
+Phoenix LiveView app for Cashflow game-night sheets. The active runtime is an Elixir/Phoenix service with LiveView UI, Ecto persistence, and SQLite-first local storage. The retired Vue/Koa runtime has been removed from tracked source; historical risks and parity notes remain in `docs/legacy-app-risk-inventory.md`.
 
----
+## Current Phoenix Capabilities
 
-## ✨ What’s Shipped Now
-- **Retro Load Screen & Navigation** – animated New Game / List Games / Leaderboard menu with keyboard support.
-- **Game Lifecycle** – create, resume, and complete games with unique IDs, player colors, and persistent state.
-- **Per-Player Sheets** – reuse the original Rat Race & Fast Track layouts with save/cancel controls and confirmation diffs.
-- **Audit Trail** – automatic logging of every change, inline diff preview, correction tagging, and rewind-to-edit workflow.
-- **Recent Change Feed** – each player card surfaces the three latest updates with friendly field labels.
-- **Winner Flow** – end-game modal captures winner/comment plus a final stats snapshot and writes to the leaderboard.
-- **SNES/GameCube Audio** – quick chimes on save and a short victory fanfare, with a global mute toggle.
-- **SQLite Persistence** – Koa + better-sqlite3 backend manages games, players, audits, and leaderboard snapshots.
+- Create 2-6 player games with unique names and colors.
+- Persist versioned player sheet state in SQLite through Ecto.
+- Calculate salary, passive income, expenses, bank-loan payment, child expenses, cashflow, and Fast Track eligibility in Elixir.
+- Edit a player sheet with draft state, diff review, save/cancel, stale-save protection, and completed-game read-only enforcement.
+- Capture audit events for turns, corrections, phase transitions, and completion.
+- Complete games with immutable leaderboard snapshots.
+- Browse lobby, dashboard, sheet, audit, leaderboard, health, and JSON backup/export routes.
+- Filter audit events and leaderboard snapshots without leaving the current route.
+- Preview completion snapshots before locking a game and review completed-game recap snapshots afterward.
+- Restore a validated JSON backup into a fresh or replaced local database.
+- Seed demo active/completed games for local review.
 
-## 🚧 In Progress / Up Next
-- **Leaderboard polish** – richer layout, filters, and navigation back to completed games.
-- **Responsive 1080p view** – shared-screen spacing and typography tuning.
-- **Timers** – game duration plus per-turn timers for future analytics.
-- **Animations & FX** – transitions, CRT overlays, and more in-game flair.
+Not yet implemented: hosted Postgres deployment wiring and legacy SQLite import. The Postgres compatibility gate can be run against a real Postgres `DATABASE_URL`; hosted infrastructure must still supply its deployment database before launch.
 
----
+## Prerequisites
 
-## 🧰 Prerequisites
-- Node.js 18+
-- npm 10+
-- SQLite (included via `better-sqlite3`, no separate install required)
+- `mise`
+- SQLite
 
----
-
-## ⚙️ Local Development
+Project runtime is pinned in `mise.toml`:
 
 ```bash
-# Install dependencies
-npm install
-
-# Run database migrations (creates ./data/cashflow.sqlite)
-npm run backend:migrate
-
-# Start the backend API on http://localhost:4000
-npm run backend:dev
-
-# In a second terminal, start the Vue dev server on http://localhost:8080
-npm run serve
+mise install
 ```
 
-The Vue dev server proxies `/api/*` requests to the backend (see `vue.config.js`). Game data lives in the `data/` directory, which is gitignored.
+## Local Development
 
-### Useful Commands
+```bash
+mise exec -- mix setup
+mise exec -- mix phx.server
+```
+
+Open `http://localhost:4000`.
+
+Game data lives in `data/cashflow_dev.sqlite3`, which is ignored.
+
+## Useful Commands
+
 | Command | Description |
 | --- | --- |
-| `npm run backend:migrate` | Apply pending SQLite migrations |
-| `npm run backend:dev` | Run Koa API server with nodemon |
-| `npm run backend:seed` | Placeholder for future seed data |
-| `npm run serve` | Vue dev server with hot reload |
-| `npm run build` | Production build (frontend only) |
+| `mise exec -- mix setup` | Fetch deps, create/migrate DB, seed demo data, build assets |
+| `mise exec -- mix test` | Run ExUnit and LiveView tests |
+| `mise exec -- mix ecto.migrate` | Apply Ecto migrations |
+| `mise exec -- mix phx.server` | Start the Phoenix dev server |
+| `mise exec -- mix assets.build` | Build CSS/JS assets |
+| `mise exec -- mix cashflow.backup.restore path/to/backup.json [--replace]` | Restore a validated JSON backup |
+| `bash scripts/check-postgres-compat.sh` | Run the Postgres compatibility gate when `DATABASE_URL` is set |
+| `bash scripts/check-specs.sh` | Validate the SDD spec hierarchy |
 
----
+## Health
 
-## 🏛️ Architecture
-
-### Frontend (Vue 2 + Vuex)
-- `src/App.vue` swaps between retro views (`LoadScreen`, `NewGameSetup`, `GameList`, `GameScreen`, `PlayerSheetView`, `LeaderboardView`).
-- Vuex (`src/store.js`) owns the multiplayer state machine, audit pagination, modals, and sheet normalization helpers.
-- Domain stores in `src/stores/` keep the original financial module structure (income, expenses, etc.).
-- API client lives in `src/api/client.js` and communicates with the backend REST endpoints.
-
-### Backend (Koa + Kysely + better-sqlite3)
-- Entry point: `src/backend/server.js`.
-- Routes: `games`, `leaderboard`, `health` under `/api/*`.
-- Migrations: `src/backend/db/migrations` (run via `npm run backend:migrate`).
-- Data directory: `data/cashflow.sqlite` (auto-created, WAL mode enabled).
-
-### Key Tables
-| Table | Purpose |
-| --- | --- |
-| `games` | Game metadata, status, timestamps, winner info |
-| `players` | Per-player sheet state (JSON blob), color, name |
-| `audit_log_entries` | Change history with before/after snapshots |
-| `leaderboard_records` | Final cashflow snapshots for completed games |
-
----
-
-## 📂 Project Layout
-```
-src/
-├── api/            # Frontend REST client
-├── backend/        # Koa server, migrations, routes
-├── components/
-│   ├── app/        # Load screen, dashboards, modals, toggles
-│   ├── misc/ …     # Reusable inputs
-│   └── ratrace/…   # Original sheet components
-├── stores/         # Vuex modules + plugins
-├── utils/          # Helpers (diffing, audio, cashflow math)
-├── App.vue         # Retro view router
-└── main.js         # Bootstraps Vue app
+```bash
+curl http://localhost:4000/healthz
+curl http://localhost:4000/status.json
 ```
 
----
+Both endpoints return JSON app/database status.
 
-## 🧪 Testing
-Automated tests are still TODO. For now:
-- Run `npm run backend:migrate` before manual testing to ensure schema sync.
-- Exercise the main flows:
-  1. Create a new game (2–6 players) and verify unique colors enforced.
-  2. Adjust a player sheet, confirm diff modal + audit log entry.
-  3. Trigger a correction from the audit modal and confirm it logs with `entryType = correction`.
-  4. Finish a game, confirm leaderboard refresh + fanfare.
+## Architecture
 
-Document manual results in PRs until Jest/Vue Test Utils are in place.
+### Phoenix App
 
----
+- `lib/cashflow/games.ex` is the public transactional boundary for games, players, audit events, leaderboard records, and backup export.
+- `lib/cashflow/sheets.ex` owns versioned sheet defaults, normalization, diffing, and phase transition helpers.
+- `lib/cashflow/calculations.ex` owns all money math and eligibility checks.
+- `lib/cashflow/money.ex` parses and displays signed integer cents.
+- `lib/cashflow_web/live/` contains the LiveView routes.
+- `lib/cashflow_web/components/` contains HEEx/LiveComponent UI building blocks.
+- `priv/repo/migrations/` contains the SQLite-first Ecto schema.
 
-## 🚀 Deployment Notes
-- **Frontend-only (legacy)**: You can still deploy the static build, but multiplayer features require the backend.
-- **Full stack**: Host the Node backend (4000) and serve the Vue build behind the same domain or a reverse proxy. Ensure the `data/` directory is writable.
-- Containerization scripts are on the roadmap once the schema stabilizes.
+### Legacy Inventory
 
----
+The old Vue/Koa runtime has been retired from tracked source. Use `docs/legacy-app-risk-inventory.md` and git history for historical comparison only. Do not reintroduce Node, Vue, Koa, Vite, Svelte, or another SPA runtime without an explicit ADR-style exception.
 
-## 🤝 Contributing
-This project powers family & friends game nights—bug reports and ideas welcome. Open an issue with steps to reproduce or a proposal before sending large PRs. Follow the coding style and commit guidance in `AGENTS.md`.
+## Specification Hierarchy
 
----
+The rewrite contract lives in `docs/SPEC.md` and `docs/specs/**`.
 
-## 🙏 Credits
+Target stack: Elixir, Phoenix, LiveView, plain HEEx/LiveComponents, Ecto, SQLite-first local persistence, and Postgres-compatible schema design.
+
+## Backup Export
+
+```bash
+curl http://localhost:4000/backup.json
+```
+
+The export includes games, players, audit events, leaderboard records, schema version, and export timestamp.
+
+## Backup Restore
+
+```bash
+mise exec -- mix cashflow.backup.restore path/to/backup.json
+mise exec -- mix cashflow.backup.restore path/to/backup.json --replace
+```
+
+Restore validates schema version, IDs, timestamps, relationships, completed-game snapshots, and audit field paths before writing. It refuses to import into a non-empty database unless `--replace` is supplied.
+
+## Validation
+
+Before handoff:
+
+```bash
+bash scripts/check-specs.sh
+mise exec -- mix format --check-formatted
+mise exec -- mix test
+```
+
+Browser verification should cover desktop, tablet, and phone viewports for the lobby, setup, dashboard, player sheet, audit, and leaderboard routes.
+
+## Credits
+
 - Original single-player sheet by [Nathan Strutz](https://github.com/nathanstrutz/cashflow-balance-sheet)
 - Cashflow is a registered trademark of Robert Kiyosaki & The Rich Dad Company
-- Multiplayer arcade edition crafted for Henry, Ashley, and the Cashflow crew

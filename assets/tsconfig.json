@@ -1,0 +1,15 @@
+// This file is needed on most editors to enable the intelligent autocompletion
+// of LiveView's JavaScript API methods. You can safely delete it if you don't need it.
+//
+// Phoenix JavaScript assets resolve from deps through this paths alias.
+{
+  "compilerOptions": {
+    "baseUrl": ".",
+    "paths": {
+      "*": ["../deps/*"]
+    },
+    "allowJs": true,
+    "noEmit": true
+  },
+  "include": ["js/**/*"]
+}

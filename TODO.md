@@ -1,36 +1,50 @@
-# Cashflow Multiplayer TODO
+# Cashflow Live TODO
 
-## Backend
-- [x] SQLite schema & migration setup
-- [x] Koa service scaffolding with health/games/leaderboard routes
-- [x] Frontend API client wrapper
-- [ ] Seed script with sample game data (optional)
+## Current Runtime
 
-## State Management
-- [x] Replace localStorage persistence with backend-driven Vuex store
-- [x] Add actions for games, players, audit log, leaderboard
-- [x] Wire optimistic update + diff-builder for confirmation modals
-- [ ] Persist audio preference (localStorage or backend profile)
+- [x] Phoenix LiveView app scaffolded at the repo root
+- [x] Runtime pinned with `mise`
+- [x] SQLite dev/test configuration wired through Ecto
+- [x] Vue/Koa runtime removed from tracked source
 
-## Frontend Views
-- [x] Retro load screen with New Game / List Games / Leaderboard menu
-- [x] New Game flow: player count, names, color selection
-- [x] Games list view with resume + end game entry points
-- [x] Game dashboard showing player financial summaries + recent changes
-- [x] Player sheet view using existing RatRace/FastTrack components with save/cancel
-- [x] Audit log modal with correction flagging
-- [x] Leaderboard view with shared-rank display
-- [ ] Leaderboard polish (filters, recap navigation, visual refresh)
+## Domain And Persistence
 
-## UX Enhancements
-- [x] Confirmation modals summarizing diffs before saves
-- [x] Winner flow with comment capture + snapshot display
-- [x] SNES/GameCube audio cues (save + victory) with mute toggle
-- [ ] Friendly labels for nested field paths (investments, fast track)
-- [ ] Add CRT/animation polish and idle tips for load screen
+- [x] Signed integer-cent money parsing and display
+- [x] Versioned Rat Race and Fast Track sheet state
+- [x] Domain calculations and golden formula tests
+- [x] Ecto schemas and migrations for games, players, audit events, and leaderboard records
+- [x] Transactional saves, corrections, phase transitions, completion, and leaderboard snapshots
+- [x] Completed-game immutability tests
+- [x] Strict audit field-path validation against the versioned sheet schema
+- [x] Postgres compatibility gate script
+- [x] Run Postgres compatibility gate against a real local Postgres database
+- [ ] Explicit setup lifecycle state if setup needs to be persisted separately from active play
+- [ ] Fast Track win-state enforcement before completion if required by final v1 rules
+- [ ] Run Postgres compatibility gate against the hosted Postgres database before hosted deployment
 
-## Future / Stretch
-- [ ] Timer instrumentation hooks (game + turn)
-- [ ] Responsive tuning for 1080p shared screens
-- [ ] Animations and additional sound effects
-- [ ] Export game history (JSON / CSV)
+## LiveView UX
+
+- [x] Lobby, new game setup, dashboard, audit, leaderboard, and backup routes
+- [x] Player sheet draft, diff review, save/cancel, stale-tab conflict handling, and notes
+- [x] Fast Track route and sheet rendering
+- [x] Dense full-sheet investment editing for real estate, businesses, stocks, and Fast Track investments
+- [x] Correction UX field labels and origin context
+- [x] Recoverable stale-sheet reload panel
+- [x] Field-level parse errors for invalid sheet inputs
+- [x] Mobile touch target sizing for core controls
+- [x] Leaderboard shared-rank tie rendering and mobile horizontal scroll
+- [x] PubSub dashboard/audit refresh after successful writes
+- [x] Correction filters and load-more behavior
+- [x] Visible lobby backup/export affordance
+- [x] Leaderboard filters
+- [x] Completion preview and richer recap/export affordances
+- [x] Desktop/tablet/phone design review screenshots
+
+## Operations
+
+- [x] `mix setup`, `mix test`, `mix phx.server`, and `mix assets.build`
+- [x] JSON backup export at `/backup.json`
+- [x] Restore/import command for backup JSON
+- [x] Seed/demo data
+- [x] Health endpoint for runtime checks
+- [ ] Legacy SQLite import only if real historical data must be preserved
